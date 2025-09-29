@@ -111,7 +111,7 @@ class CommentModel(Base):
     content: Mapped[str] = mapped_column(String(500))
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[UserModel] = relationship(back_populates="", lazy="joined")
+    user: Mapped[UserModel] = relationship(back_populates="comments", lazy="joined")
 
     post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("posts.id"))
     post: Mapped[PostModel] = relationship(back_populates="comments", lazy="joined")
