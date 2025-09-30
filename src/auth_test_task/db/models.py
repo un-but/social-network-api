@@ -85,6 +85,9 @@ class UserModel(Base):
     def check_password(self, raw_password: str) -> bool:
         return bcrypt.checkpw(raw_password.encode("utf-8"), self._password.encode("utf-8"))
 
+    def get_user_id(self) -> uuid.UUID:
+        return self.id
+
 
 class PostModel(Base):
     """Модель поста."""
@@ -102,6 +105,9 @@ class PostModel(Base):
         lazy="joined",
     )
 
+    def get_user_id(self) -> uuid.UUID:
+        return self.user.id
+
 
 class CommentModel(Base):
     """Модель комментария."""
@@ -116,6 +122,9 @@ class CommentModel(Base):
     post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("posts.id"))
     post: Mapped[PostModel] = relationship(back_populates="comments", lazy="joined")
 
+    def get_user_id(self) -> uuid.UUID:
+        return self.user.id
+
 
 class RoleRuleModel(Base):
     """Правила доступа для ролей и объектов."""
@@ -124,3 +133,6 @@ class RoleRuleModel(Base):
     object_type: Mapped[OBJECT_TYPE] = mapped_column(primary_key=True)
     action: Mapped[ACTION_TYPE] = mapped_column(primary_key=True)
     allowed: Mapped[bool] = mapped_column()
+
+    def get_user_id(self) -> None:
+        return None
