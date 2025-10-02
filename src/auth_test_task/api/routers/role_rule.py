@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import (
-    access_to_obj,
+    access,
     auth_dep,
     db_dep,
 )
@@ -55,7 +55,7 @@ async def create_role_rule(
     response_description="Информация о правиле роли: правило роли успешно найдено",
 )
 async def get_role_rule(
-    role_rule: Annotated[RoleRuleModel, Depends(access_to_obj("role_rules", "read"))],
+    role_rule: Annotated[RoleRuleModel, Depends(access("role_rules", "read"))],
 ) -> RoleRuleResponse:
     return RoleRuleResponse.model_validate(role_rule)
 
@@ -78,7 +78,7 @@ async def get_all_role_rules(db: db_dep) -> list[RoleRuleResponse]:
 )
 async def update_role_rule(
     update_info: RoleRuleUpdate,
-    role_rule: Annotated[RoleRuleModel, Depends(access_to_obj("role_rules", "update"))],
+    role_rule: Annotated[RoleRuleModel, Depends(access("role_rules", "update"))],
     db: db_dep,
 ) -> RoleRuleResponse:
     try:
@@ -104,7 +104,7 @@ async def update_role_rule(
     response_description="Пустой ответ: правило роли успешно удалёно",
 )
 async def delete_role_rule(
-    role_rule: Annotated[RoleRuleModel, Depends(access_to_obj("role_rules", "delete"))],
+    role_rule: Annotated[RoleRuleModel, Depends(access("role_rules", "delete"))],
     db: db_dep,
 ) -> Response:
     try:

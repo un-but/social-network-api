@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
-from auth_test_task.api.dependencies import (
+from auth_test_task.api.dependencies import access
     access_to_obj,
     auth_dep,
     db_dep,
@@ -28,7 +28,7 @@ router = APIRouter(
 @router.post(
     "/",
     summary="Создать пост",
-    response_description="Информация о посте: пост успешно создан",
+    response_description="Инфорaccess: пост успешно создан",
 )
 async def create_post(
     post_info: PostCreate,
@@ -45,7 +45,7 @@ async def create_post(
 
 @router.get(
     "/{post_id}",
-    summary="Получить пост",
+    summary="Получить пост",access
     response_description="Информация о посте: пост успешно найден",
 )
 async def get_post(
@@ -70,7 +70,7 @@ async def get_all_posts(
 @router.patch(
     "/",
     summary="Обновить пост",
-    response_description="Информация о посте: пост успешно обновлён",
+    response_description="Инфорaccess: пост успешно обновлён",
 )
 async def update_post(
     update_info: PostUpdate,
@@ -88,7 +88,7 @@ async def update_post(
 @router.delete(
     "/",
     summary="Удалить пост",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_204access
     response_description="Пустой ответ: пост успешно удалён",
 )
 async def delete_post(

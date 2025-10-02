@@ -1,14 +1,12 @@
 """Эндпоинты, отвечающие за управление комментариями."""
 
 import logging
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
-from auth_test_task.api.dependencies import access_to_obj, auth_dep, db_dep
+from auth_test_task.api.dependencies import access, auth_dep, comment_dep, db_dep, post_dep
 from auth_test_task.db.dal import CommentDAL
-from auth_test_task.db.models import CommentModel, PostModel
 from auth_test_task.schemas import CommentCreate, CommentResponse, CommentUpdate
 
 logger = logging.getLogger("auth_test_task")
@@ -25,10 +23,11 @@ router = APIRouter(
     "/",
     summary="Создать комментарий",
     response_description="Информация о комментарие: комментарий успешно создан",
+    dependencies=[Depends(access("comments", "create"))],
 )
 async def create_comment(
     comment_info: CommentCreate,
-    post: Annotated[PostModel, Depends(access_to_obj("posts", "read"))],
+    post: post_dep,
     user: auth_dep,
     db: db_dep,
 ) -> CommentResponse:
@@ -45,9 +44,10 @@ async def create_comment(
     "/{comment_id}",
     summary="Получить комментарий",
     response_description="Информация о комментарие: комментарий успешно найден",
+    dependencies=[Depends(access("comments", "read"))],
 )
 async def get_comment(
-    comment: Annotated[CommentModel, Depends(access_to_obj("comments", "read"))],
+    comment: comment_dep,
 ) -> CommentResponse:
     return CommentResponse.model_validate(comment)
 
@@ -69,10 +69,11 @@ async def get_all_comments(
     "/",
     summary="Обновить комментарий",
     response_description="Информация о комментарие: комментарий успешно обновлён",
+    dependencies=[Depends(access("comments", "update"))],
 )
 async def update_comment(
     update_info: CommentUpdate,
-    comment: Annotated[CommentModel, Depends(access_to_obj("comments", "update"))],
+    comment: comment_dep,
     db: db_dep,
 ) -> CommentResponse:
     try:
@@ -88,9 +89,10 @@ async def update_comment(
     summary="Удалить комментарий",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: комментарий успешно удалён",
+    dependencies=[Depends(access("comments", "delete"))],
 )
 async def delete_comment(
-    comment: Annotated[CommentModel, Depends(access_to_obj("comments", "delete"))],
+    comment: comment_dep,
     db: db_dep,
 ) -> Response:
     try:
