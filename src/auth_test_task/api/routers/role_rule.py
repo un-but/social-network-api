@@ -1,18 +1,12 @@
 """Эндпоинты, отвечающие за управление правилами ролей."""
 
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
-from auth_test_task.api.dependencies import (
-    access,
-    auth_dep,
-    db_dep,
-)
+from auth_test_task.api.dependencies import access, db_dep, role_rule_dep
 from auth_test_task.db.dal import RoleRuleDAL
-from auth_test_task.db.models import RoleRuleModel
 from auth_test_task.schemas import (
     RoleRuleCreate,
     RoleRuleDelete,
@@ -35,10 +29,10 @@ router = APIRouter(
     "/",
     summary="Создать правило роли",
     response_description="Информация о правиле роли: правило роли успешно создано",
+    dependencies=[access("role_rules", "create")],
 )
 async def create_role_rule(
     role_rule_info: RoleRuleCreate,
-    user: auth_dep,
     db: db_dep,
 ) -> RoleRuleResponse:
     try:
@@ -53,9 +47,10 @@ async def create_role_rule(
     "/{role}/{object_type}/{action}",
     summary="Получить правило роли",
     response_description="Информация о правиле роли: правило роли успешно найдено",
+    dependencies=[access("role_rules", "read")],
 )
 async def get_role_rule(
-    role_rule: Annotated[RoleRuleModel, Depends(access("role_rules", "read"))],
+    role_rule: role_rule_dep,
 ) -> RoleRuleResponse:
     return RoleRuleResponse.model_validate(role_rule)
 
@@ -75,10 +70,11 @@ async def get_all_role_rules(db: db_dep) -> list[RoleRuleResponse]:
     "/",
     summary="Обновить правило роли",
     response_description="Информация о правиле роли: правило роли успешно обновлёно",
+    dependencies=[access("role_rules", "update")],
 )
 async def update_role_rule(
     update_info: RoleRuleUpdate,
-    role_rule: Annotated[RoleRuleModel, Depends(access("role_rules", "update"))],
+    role_rule: role_rule_dep,
     db: db_dep,
 ) -> RoleRuleResponse:
     try:
@@ -102,9 +98,10 @@ async def update_role_rule(
     summary="Удалить правило роли",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: правило роли успешно удалёно",
+    dependencies=[access("role_rules", "delete")],
 )
 async def delete_role_rule(
-    role_rule: Annotated[RoleRuleModel, Depends(access("role_rules", "delete"))],
+    role_rule: role_rule_dep,
     db: db_dep,
 ) -> Response:
     try:

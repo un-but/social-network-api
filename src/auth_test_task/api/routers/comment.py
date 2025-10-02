@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import access, auth_dep, comment_dep, db_dep, post_dep
@@ -23,7 +23,7 @@ router = APIRouter(
     "/",
     summary="Создать комментарий",
     response_description="Информация о комментарие: комментарий успешно создан",
-    dependencies=[Depends(access("comments", "create"))],
+    dependencies=[access("comments", "create")],
 )
 async def create_comment(
     comment_info: CommentCreate,
@@ -44,7 +44,7 @@ async def create_comment(
     "/{comment_id}",
     summary="Получить комментарий",
     response_description="Информация о комментарие: комментарий успешно найден",
-    dependencies=[Depends(access("comments", "read"))],
+    dependencies=[access("comments", "read")],
 )
 async def get_comment(
     comment: comment_dep,
@@ -69,7 +69,7 @@ async def get_all_comments(
     "/",
     summary="Обновить комментарий",
     response_description="Информация о комментарие: комментарий успешно обновлён",
-    dependencies=[Depends(access("comments", "update"))],
+    dependencies=[access("comments", "update")],
 )
 async def update_comment(
     update_info: CommentUpdate,
@@ -89,7 +89,7 @@ async def update_comment(
     summary="Удалить комментарий",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: комментарий успешно удалён",
-    dependencies=[Depends(access("comments", "delete"))],
+    dependencies=[access("comments", "delete")],
 )
 async def delete_comment(
     comment: comment_dep,

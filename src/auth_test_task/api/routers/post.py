@@ -6,11 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
-from auth_test_task.api.dependencies import access
-    access_to_obj,
-    auth_dep,
-    db_dep,
-)
+from auth_test_task.api.dependencies import access, auth_dep, db_dep, post_dep
 from auth_test_task.db.dal import PostDAL
 from auth_test_task.db.models import PostModel
 from auth_test_task.schemas import PostCreate, PostResponse, PostUpdate
@@ -28,7 +24,8 @@ router = APIRouter(
 @router.post(
     "/",
     summary="Создать пост",
-    response_description="Инфорaccess: пост успешно создан",
+    response_description="Информация о посте: пост успешно создан",
+    dependencies=[access("posts", "create")],
 )
 async def create_post(
     post_info: PostCreate,
@@ -45,11 +42,12 @@ async def create_post(
 
 @router.get(
     "/{post_id}",
-    summary="Получить пост",access
+    summary="Получить пост",
     response_description="Информация о посте: пост успешно найден",
+    dependencies=[access("posts", "read")],
 )
 async def get_post(
-    post: Annotated[PostModel, Depends(access_to_obj("posts", "read"))],
+    post: post_dep,
 ) -> PostResponse:
     return PostResponse.model_validate(post)
 
@@ -58,6 +56,7 @@ async def get_post(
     "/",
     summary="Получить все посты",
     response_description="Информация о постах: список успешно сформирован",
+    dependencies=[access("posts", "read")],
 )
 async def get_all_posts(
     db: db_dep,
@@ -70,11 +69,12 @@ async def get_all_posts(
 @router.patch(
     "/",
     summary="Обновить пост",
-    response_description="Инфорaccess: пост успешно обновлён",
+    response_description="Информация о посте: пост успешно обновлён",
+    dependencies=[access("posts", "update")],
 )
 async def update_post(
     update_info: PostUpdate,
-    post: Annotated[PostModel, Depends(access_to_obj("posts", "update"))],
+    post: post_dep,
     db: db_dep,
 ) -> PostResponse:
     try:
@@ -88,11 +88,12 @@ async def update_post(
 @router.delete(
     "/",
     summary="Удалить пост",
-    status_code=status.HTTP_204access
+    status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: пост успешно удалён",
+    dependencies=[access("posts", "delete")],
 )
 async def delete_post(
-    post: Annotated[PostModel, Depends(access_to_obj("posts", "delete"))],
+    post: post_dep,
     db: db_dep,
 ) -> Response:
     try:
