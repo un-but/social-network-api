@@ -4,7 +4,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from auth_test_task.db.models import Base
+from auth_test_task.db.models import BaseModel
 from auth_test_task.schemas import config
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -16,7 +16,7 @@ url = config.database.ps_url.get_secret_value()  # Секретный url из .
 fileConfig("logconfig.ini")
 
 # Объект метаданных базовой модели для поддержки автогенерации миграций
-target_metadata = Base.metadata
+target_metadata = BaseModel.metadata
 
 
 def run_migrations_offline() -> None:

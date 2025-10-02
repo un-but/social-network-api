@@ -23,7 +23,6 @@ from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, RoleRuleGet
 
 logger = logging.getLogger("auth_test_task")
 
-
 obj_type = TypeVar("obj_type", UserModel, PostModel, CommentModel, RoleRuleModel)
 
 
@@ -89,7 +88,10 @@ def access_to_obj(
             db,
         )
 
-        if user and (user.id == obj.get_user_id() or rule.allowed):
+        if user and user.id == obj.get_user_id():
+            return obj
+
+        if rule.allowed:
             return obj
 
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")

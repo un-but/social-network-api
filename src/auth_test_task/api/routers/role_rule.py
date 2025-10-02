@@ -1,17 +1,18 @@
 """Эндпоинты, отвечающие за управление правилами ролей."""
 
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import (
-    admin_dep,
+    access_to_obj,
+    auth_dep,
     db_dep,
-    read_role_rule_dep,
-    write_role_rule_dep,
 )
 from auth_test_task.db.dal import RoleRuleDAL
+from auth_test_task.db.models import RoleRuleModel
 from auth_test_task.schemas import (
     RoleRuleCreate,
     RoleRuleDelete,
@@ -37,7 +38,7 @@ router = APIRouter(
 )
 async def create_role_rule(
     role_rule_info: RoleRuleCreate,
-    user: admin_dep,
+    user: auth_dep,
     db: db_dep,
 ) -> RoleRuleResponse:
     try:
@@ -54,7 +55,7 @@ async def create_role_rule(
     response_description="Информация о правиле роли: правило роли успешно найдено",
 )
 async def get_role_rule(
-    role_rule: read_role_rule_dep,
+    role_rule: Annotated[RoleRuleModel, Depends(access_to_obj("role_rules", "read"))],
 ) -> RoleRuleResponse:
     return RoleRuleResponse.model_validate(role_rule)
 
@@ -77,7 +78,7 @@ async def get_all_role_rules(db: db_dep) -> list[RoleRuleResponse]:
 )
 async def update_role_rule(
     update_info: RoleRuleUpdate,
-    role_rule: write_role_rule_dep,
+    role_rule: Annotated[RoleRuleModel, Depends(access_to_obj("role_rules", "update"))],
     db: db_dep,
 ) -> RoleRuleResponse:
     try:
@@ -103,7 +104,7 @@ async def update_role_rule(
     response_description="Пустой ответ: правило роли успешно удалёно",
 )
 async def delete_role_rule(
-    role_rule: write_role_rule_dep,
+    role_rule: Annotated[RoleRuleModel, Depends(access_to_obj("role_rules", "delete"))],
     db: db_dep,
 ) -> Response:
     try:

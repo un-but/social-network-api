@@ -1,19 +1,14 @@
 """Эндпоинты, отвечающие за управление комментариями."""
 
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
-from auth_test_task.api.dependencies import (
-    auth_dep,
-    db_dep,
-    manager_dep,
-    read_comment_dep,
-    read_post_dep,
-    write_comment_dep,
-)
+from auth_test_task.api.dependencies import access_to_obj, auth_dep, db_dep
 from auth_test_task.db.dal import CommentDAL
+from auth_test_task.db.models import CommentModel, PostModel
 from auth_test_task.schemas import CommentCreate, CommentResponse, CommentUpdate
 
 logger = logging.getLogger("auth_test_task")
@@ -33,7 +28,7 @@ router = APIRouter(
 )
 async def create_comment(
     comment_info: CommentCreate,
-    post: read_post_dep,
+    post: Annotated[PostModel, Depends(access_to_obj("posts", "read"))],
     user: auth_dep,
     db: db_dep,
 ) -> CommentResponse:
@@ -52,7 +47,7 @@ async def create_comment(
     response_description="Информация о комментарие: комментарий успешно найден",
 )
 async def get_comment(
-    comment: read_comment_dep,
+    comment: Annotated[CommentModel, Depends(access_to_obj("comments", "read"))],
 ) -> CommentResponse:
     return CommentResponse.model_validate(comment)
 
@@ -63,7 +58,6 @@ async def get_comment(
     response_description="Информация о комментариях: список успешно сформирован",
 )
 async def get_all_comments(
-    admin: manager_dep,
     db: db_dep,
 ) -> list[CommentResponse]:
     comments = await CommentDAL.get_all(db)
@@ -78,7 +72,7 @@ async def get_all_comments(
 )
 async def update_comment(
     update_info: CommentUpdate,
-    comment: write_comment_dep,
+    comment: Annotated[CommentModel, Depends(access_to_obj("comments", "update"))],
     db: db_dep,
 ) -> CommentResponse:
     try:
@@ -96,7 +90,7 @@ async def update_comment(
     response_description="Пустой ответ: комментарий успешно удалён",
 )
 async def delete_comment(
-    comment: write_comment_dep,
+    comment: Annotated[CommentModel, Depends(access_to_obj("comments", "delete"))],
     db: db_dep,
 ) -> Response:
     try:

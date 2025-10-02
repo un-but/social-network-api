@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from auth_test_task.api.dependencies import access_to_obj
+from auth_test_task.api.dependencies import auth_dep, cookies_dep, db_dep, rd_dep
 from auth_test_task.api.utils import (
     create_user_tokens,
     delete_user_tokens,
@@ -39,7 +39,7 @@ router = APIRouter(
 )
 async def login(
     auth_info: AuthWithEmail,
-    user: ,
+    user: auth_dep,
     db: db_dep,
     rd: rd_dep,
     response: Response,

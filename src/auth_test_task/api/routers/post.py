@@ -1,18 +1,18 @@
 """Эндпоинты, отвечающие за управление постами."""
 
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import (
+    access_to_obj,
     auth_dep,
     db_dep,
-    manager_dep,
-    read_post_dep,
-    write_post_dep,
 )
 from auth_test_task.db.dal import PostDAL
+from auth_test_task.db.models import PostModel
 from auth_test_task.schemas import PostCreate, PostResponse, PostUpdate
 
 logger = logging.getLogger("auth_test_task")
@@ -49,7 +49,7 @@ async def create_post(
     response_description="Информация о посте: пост успешно найден",
 )
 async def get_post(
-    post: read_post_dep,
+    post: Annotated[PostModel, Depends(access_to_obj("posts", "read"))],
 ) -> PostResponse:
     return PostResponse.model_validate(post)
 
@@ -60,7 +60,6 @@ async def get_post(
     response_description="Информация о постах: список успешно сформирован",
 )
 async def get_all_posts(
-    admin: manager_dep,
     db: db_dep,
 ) -> list[PostResponse]:
     posts = await PostDAL.get_all(db)
@@ -75,7 +74,7 @@ async def get_all_posts(
 )
 async def update_post(
     update_info: PostUpdate,
-    post: write_post_dep,
+    post: Annotated[PostModel, Depends(access_to_obj("posts", "update"))],
     db: db_dep,
 ) -> PostResponse:
     try:
@@ -93,7 +92,7 @@ async def update_post(
     response_description="Пустой ответ: пост успешно удалён",
 )
 async def delete_post(
-    post: write_post_dep,
+    post: Annotated[PostModel, Depends(access_to_obj("posts", "delete"))],
     db: db_dep,
 ) -> Response:
     try:

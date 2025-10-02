@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import override
 import uuid
 from datetime import datetime
 
@@ -28,7 +29,7 @@ from auth_test_task.schemas import (
 rename_pattern = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-class Base(DeclarativeBase):
+class BaseModel(DeclarativeBase):
     """Базовый класс для моделей SQLAlchemy.
 
     Автоматически генерирует имя таблицы в snake_case во множественном числе.
@@ -44,8 +45,13 @@ class Base(DeclarativeBase):
         ).lower()
         return class_name + "s" if class_name[-1] != "y" else class_name[:-1] + "ies"
 
+    # abstract method
+    def get_user_id(self) -> uuid.UUID | None:
+        msg = "Необходимо реализовать метод get_user_id в дочернем классе."
+        raise NotImplementedError(msg)
 
-class UserModel(Base):
+
+class UserModel(BaseModel):
     """Модель пользователя (в т.ч. и администратора)."""
 
     id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
@@ -85,11 +91,12 @@ class UserModel(Base):
     def check_password(self, raw_password: str) -> bool:
         return bcrypt.checkpw(raw_password.encode("utf-8"), self._password.encode("utf-8"))
 
-    def get_user_id(self) -> uuid.UUID:
+    @override
+    def get_user_id(self) -> uuid.UUID | None:
         return self.id
 
 
-class PostModel(Base):
+class PostModel(BaseModel):
     """Модель поста."""
 
     id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
@@ -105,11 +112,12 @@ class PostModel(Base):
         lazy="joined",
     )
 
-    def get_user_id(self) -> uuid.UUID:
+    @override
+    def get_user_id(self) -> uuid.UUID | None:
         return self.user.id
 
 
-class CommentModel(Base):
+class CommentModel(BaseModel):
     """Модель комментария."""
 
     id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
@@ -122,11 +130,12 @@ class CommentModel(Base):
     post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("posts.id"))
     post: Mapped[PostModel] = relationship(back_populates="comments", lazy="joined")
 
-    def get_user_id(self) -> uuid.UUID:
+    @override
+    def get_user_id(self) -> uuid.UUID | None:
         return self.user.id
 
 
-class RoleRuleModel(Base):
+class RoleRuleModel(BaseModel):
     """Правила доступа для ролей и объектов."""
 
     role: Mapped[USER_ROLE] = mapped_column(primary_key=True)
@@ -134,5 +143,6 @@ class RoleRuleModel(Base):
     action: Mapped[ACTION_TYPE] = mapped_column(primary_key=True)
     allowed: Mapped[bool] = mapped_column()
 
-    def get_user_id(self) -> None:
+    @override
+    def get_user_id(self) -> uuid.UUID | None:
         return None
