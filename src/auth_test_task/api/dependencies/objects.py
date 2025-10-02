@@ -6,23 +6,34 @@ import logging
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, Path, Query, status
 
 from auth_test_task.api.dependencies._common import db_dep
 from auth_test_task.db.dal import CommentDAL, PostDAL, RoleRuleDAL, UserDAL
 from auth_test_task.db.models import CommentModel, PostModel, RoleRuleModel, UserModel
-from auth_test_task.schemas import RoleRuleGet
+from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, USER_ROLE, RoleRuleGet
 
 logger = logging.getLogger("auth_test_task")
 
 
 async def get_role_rule(
     db: db_dep,
-    role_rule_info: Annotated[RoleRuleGet, Query(...)],
+    role_rule: RoleRuleGet = Path(...),
+    # role: USER_ROLE = Query(...),
+    # object_type: OBJECT_TYPE = Query(...),
+    # action: ACTION_TYPE = Query(...),
 ) -> RoleRuleModel:
     """Проверяет, что пользователь может менять правило роли."""
     try:
-        return await RoleRuleDAL.get(role_rule_info, db)
+        return await RoleRuleDAL.get(role_rule, db)
+        # return await RoleRuleDAL.get(
+        #     RoleRuleGet(
+        #         role=role,
+        #         object_type=object_type,
+        #         action=action,
+        #     ),
+        #     db,
+        # )
     except LookupError:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Правило роли не найдено")
 

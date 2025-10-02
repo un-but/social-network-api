@@ -21,6 +21,7 @@ class RoleRuleGet(RoleRuleBase):
 class RoleRuleCreate(RoleRuleBase):
     """Схема создания правила роли пользователя."""
 
+    full_access: bool
     allowed: bool
 
 
@@ -34,6 +35,8 @@ class RoleRuleUpdate(BaseSchema):
     role: USER_ROLE | None = None
     object_type: OBJECT_TYPE | None = None
     action: ACTION_TYPE | None = None
+    full_access: bool | None = None
+
     allowed: bool | None = None
 
 

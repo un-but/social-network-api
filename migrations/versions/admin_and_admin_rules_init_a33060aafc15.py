@@ -28,15 +28,20 @@ def upgrade() -> None:
         sa.column("role", sa.String),
         sa.column("object_type", sa.String),
         sa.column("action", sa.String),
+        sa.column("full_access", sa.Boolean),
         sa.column("allowed", sa.Boolean),
     )
 
     # Добавление правил для роли 'admin' и объекта 'users'
     rules = [
-        {"role": "admin", "object_type": "role_rules", "action": "create", "allowed": True},
-        {"role": "admin", "object_type": "role_rules", "action": "read", "allowed": True},
-        {"role": "admin", "object_type": "role_rules", "action": "update", "allowed": True},
-        {"role": "admin", "object_type": "role_rules", "action": "delete", "allowed": True},
+        {
+            "role": "admin",
+            "object_type": "role_rules",
+            "action": action,
+            "full_access": True,
+            "allowed": True,
+        }
+        for action in ("create", "read", "update", "delete")
     ]
 
     users = sa.table(

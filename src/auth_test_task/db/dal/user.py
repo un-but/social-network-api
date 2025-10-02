@@ -94,19 +94,6 @@ class UserDAL:
         return user
 
     @staticmethod
-    async def change_active_status(
-        user_id: uuid.UUID,
-        is_active: bool,
-        session: AsyncSession,
-    ) -> UserModel:
-        user = await UserDAL.get_by_id(user_id, session)
-
-        user.is_active = is_active
-
-        await session.commit()
-        return user
-
-    @staticmethod
     async def drop(user_id: uuid.UUID, session: AsyncSession) -> None:
         user = await UserDAL.get_by_id(user_id, session)
 

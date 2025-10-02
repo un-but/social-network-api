@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import re
-from typing import override
 import uuid
 from datetime import datetime
+from typing import override
 
 import bcrypt
 from sqlalchemy import ForeignKey, String, func
@@ -141,6 +141,8 @@ class RoleRuleModel(BaseModel):
     role: Mapped[USER_ROLE] = mapped_column(primary_key=True)
     object_type: Mapped[OBJECT_TYPE] = mapped_column(primary_key=True)
     action: Mapped[ACTION_TYPE] = mapped_column(primary_key=True)
+    full_access: Mapped[bool] = mapped_column(default=False)
+
     allowed: Mapped[bool] = mapped_column()
 
     @override

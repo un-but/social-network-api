@@ -15,12 +15,6 @@ if TYPE_CHECKING:  # Требуется для корректной работы
     from auth_test_task.schemas import CommentChildUserResponse, PostChildResponse
 
 
-class RoleBase(BaseSchema):
-    """Базовая схема роли."""
-
-    role: USER_ROLE
-
-
 class UserBase(BaseSchema):
     """Базовая схема пользователя."""
 
@@ -31,6 +25,7 @@ class UserBase(BaseSchema):
 class UserCreate(UserBase):
     """Схема для создания пользователя."""
 
+    role: USER_ROLE = "user"
     password: str = Field(
         validation_alias=AliasChoices("password", "_password"),
         serialization_alias="_password",
@@ -39,17 +34,10 @@ class UserCreate(UserBase):
     )
 
 
-class UserWithRoleCreate(UserCreate, RoleBase):
-    """Схема для создания пользователя с указанием роли."""
-
-
 class UserResponse(UserBase):
     """Схема для ответа с данными пользователя."""
 
     id: uuid.UUID
-
-    is_active: bool = Field(exclude=True)
-    role: USER_ROLE
 
     created_at: datetime
 
@@ -57,6 +45,13 @@ class UserResponse(UserBase):
     comments: list[CommentChildUserResponse] | None = None
 
     _deferred = ("posts", "comments")
+
+
+class UserFullResponse(UserBase):
+    """Схема для ответа с данными пользователя."""
+
+    is_active: bool = Field(exclude=True)
+    role: USER_ROLE
 
 
 class UserUpdate(BaseSchema):
@@ -71,6 +66,5 @@ class UserUpdate(BaseSchema):
         max_length=64,
     )
 
-
-class UserWithRoleUpdate(UserUpdate, RoleBase):
-    """Схема для обновления данных пользователя с указанием роли."""
+    role: USER_ROLE | None = None
+    is_active: bool | None = None

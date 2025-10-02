@@ -33,6 +33,7 @@ def upgrade() -> None:
             sa.Enum("create", "read", "update", "delete", native_enum=False),
             nullable=False,
         ),
+        sa.Column("full_access", sa.Boolean(), nullable=False),
         sa.Column("allowed", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("role", "object_type", "action"),
     )

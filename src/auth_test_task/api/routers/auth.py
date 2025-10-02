@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from auth_test_task.api.dependencies import auth_dep, cookies_dep, db_dep, rd_dep
 from auth_test_task.api.utils import (
