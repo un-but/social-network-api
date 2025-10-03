@@ -1,14 +1,12 @@
 """Эндпоинты, отвечающие за управление постами."""
 
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import access, auth_dep, db_dep, post_dep
 from auth_test_task.db.dal import PostDAL
-from auth_test_task.db.models import PostModel
 from auth_test_task.schemas import PostCreate, PostResponse, PostUpdate
 
 logger = logging.getLogger("auth_test_task")
@@ -67,7 +65,7 @@ async def get_all_posts(
 
 
 @router.patch(
-    "/",
+    "/{post_id}",
     summary="Обновить пост",
     response_description="Информация о посте: пост успешно обновлён",
     dependencies=[access("posts", "update")],
@@ -86,7 +84,7 @@ async def update_post(
 
 
 @router.delete(
-    "/",
+    "/{post_id}",
     summary="Удалить пост",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: пост успешно удалён",

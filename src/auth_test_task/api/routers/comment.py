@@ -66,7 +66,7 @@ async def get_all_comments(
 
 
 @router.patch(
-    "/",
+    "/{comment_id}",
     summary="Обновить комментарий",
     response_description="Информация о комментарие: комментарий успешно обновлён",
     dependencies=[access("comments", "update")],
@@ -85,7 +85,7 @@ async def update_comment(
 
 
 @router.delete(
-    "/",
+    "/{comment_id}",
     summary="Удалить комментарий",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: комментарий успешно удалён",

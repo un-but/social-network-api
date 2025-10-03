@@ -47,8 +47,8 @@ class UserResponse(UserBase):
     _deferred = ("posts", "comments")
 
 
-class UserFullResponse(UserBase):
-    """Схема для ответа с данными пользователя."""
+class UserFullResponse(UserResponse):
+    """Схема для ответа со всеми данными пользователя."""
 
     is_active: bool = Field(exclude=True)
     role: USER_ROLE

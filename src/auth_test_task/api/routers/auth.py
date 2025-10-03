@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Response, status
 
-from auth_test_task.api.dependencies import auth_dep, cookies_dep, db_dep, rd_dep
+from auth_test_task.api.dependencies import cookies_dep, db_dep, rd_dep
 from auth_test_task.api.utils import (
     create_user_tokens,
     delete_user_tokens,
@@ -38,14 +38,10 @@ router = APIRouter(
 )
 async def login(
     auth_info: AuthWithEmail,
-    user: auth_dep,
     db: db_dep,
     rd: rd_dep,
     response: Response,
 ) -> AuthResponse:
-    if user and user.role not in ("admin", "manager"):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Вы уже авторизованы")
-
     try:
         user = await UserDAL.get_with_email(auth_info.email, db)
 

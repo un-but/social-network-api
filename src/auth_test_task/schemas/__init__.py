@@ -46,6 +46,7 @@ from auth_test_task.schemas.user import (
 )
 
 UserResponse.model_rebuild()
+UserFullResponse.model_rebuild()
 PostResponse.model_rebuild()
 
 CommentChildPostResponse.model_rebuild()

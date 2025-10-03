@@ -67,7 +67,7 @@ async def get_all_role_rules(db: db_dep) -> list[RoleRuleResponse]:
 
 
 @router.patch(
-    "/",
+    "/{role}/{object_type}/{action}",
     summary="Обновить правило роли",
     response_description="Информация о правиле роли: правило роли успешно обновлёно",
     dependencies=[access("role_rules", "update")],
@@ -94,7 +94,7 @@ async def update_role_rule(
 
 
 @router.delete(
-    "/",
+    "/{role}/{object_type}/{action}",
     summary="Удалить правило роли",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: правило роли успешно удалёно",
