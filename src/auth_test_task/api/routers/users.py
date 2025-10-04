@@ -3,19 +3,17 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import (
-    access,
     auth_dep,
     db_dep,
     detect_rule,
     user_dep,
 )
-from auth_test_task.api.dependencies.objects import receive_user as gt_user
 from auth_test_task.db.dal import UserDAL
-from auth_test_task.db.models import RoleRuleModel, UserModel
+from auth_test_task.db.models import RoleRuleModel
 from auth_test_task.schemas import (
     USER_INCLUDE_TYPE,
     UserCreate,
@@ -80,7 +78,7 @@ async def get_any_user(
     db: db_dep,
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> UserResponse | UserFullResponse:
-    if not rule.allowed and authorized_user.id != user.id:
+    if not rule.allowed and authorized_user.id != user.get_user_id():
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     user = await UserDAL.get_by_id(user.id, db, include)
@@ -113,7 +111,7 @@ async def update_user(
     rule: Annotated[RoleRuleModel, detect_rule("users", "read", check_allowed=False)],
     db: db_dep,
 ) -> UserResponse | UserFullResponse:
-    if not rule.allowed and authorized_user.id != user.id:
+    if not rule.allowed and authorized_user.id != user.get_user_id():
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     try:
@@ -132,8 +130,8 @@ async def update_user(
 )
 async def hard_delete_any_user(
     user: user_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("users", "delete")],
     db: db_dep,
+    _: Annotated[RoleRuleModel, detect_rule("users", "delete")],
 ) -> Response:
     try:
         await UserDAL.drop(user.id, db)

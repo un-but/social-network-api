@@ -92,7 +92,7 @@ class UserModel(BaseModel):
         return bcrypt.checkpw(raw_password.encode("utf-8"), self._password.encode("utf-8"))
 
     @override
-    def get_user_id(self) -> uuid.UUID | None:
+    def get_user_id(self) -> uuid.UUID:
         return self.id
 
 
@@ -113,7 +113,7 @@ class PostModel(BaseModel):
     )
 
     @override
-    def get_user_id(self) -> uuid.UUID | None:
+    def get_user_id(self) -> uuid.UUID:
         return self.user.id
 
 
@@ -131,7 +131,7 @@ class CommentModel(BaseModel):
     post: Mapped[PostModel] = relationship(back_populates="comments", lazy="joined")
 
     @override
-    def get_user_id(self) -> uuid.UUID | None:
+    def get_user_id(self) -> uuid.UUID:
         return self.user.id
 
 
@@ -146,5 +146,5 @@ class RoleRuleModel(BaseModel):
     allowed: Mapped[bool] = mapped_column()
 
     @override
-    def get_user_id(self) -> uuid.UUID | None:
+    def get_user_id(self) -> None:
         return None
