@@ -8,8 +8,8 @@ from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import auth_dep, comment_dep, db_dep, detect_rule, post_dep
 from auth_test_task.db.dal import CommentDAL
-from auth_test_task.db.models import RoleRuleModel
-from auth_test_task.schemas import CommentCreate, CommentResponse, CommentUpdate
+from auth_test_task.schemas import CommentCreate, CommentResponse, CommentUpdate, RuleInfo
+from auth_test_task.utils.access import check_access
 
 logger = logging.getLogger("auth_test_task")
 router = APIRouter(
@@ -30,9 +30,12 @@ async def create_comment(
     comment_info: CommentCreate,
     post: post_dep,
     user: auth_dep,
-    _: Annotated[RoleRuleModel, detect_rule("comments", "create")],
+    rule: Annotated[RuleInfo, detect_rule("comments", "create")],
     db: db_dep,
 ) -> CommentResponse:
+    if not rule.owned_rule.allowed:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещен")
+
     try:
         comment = await CommentDAL.create(user.id, post.id, comment_info, db)
     except IntegrityError:
@@ -50,9 +53,9 @@ async def create_comment(
 async def get_comment(
     comment: comment_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("comments", "read", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("comments", "read")],
 ) -> CommentResponse:
-    if not rule.allowed and authorized_user.get_user_id() != comment.get_user_id():
+    if check_access(authorized_user, comment, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     return CommentResponse.model_validate(comment)
@@ -81,9 +84,9 @@ async def update_comment(
     comment: comment_dep,
     db: db_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("comments", "update", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("comments", "update")],
 ) -> CommentResponse:
-    if not rule.allowed and authorized_user.get_user_id() != comment.get_user_id():
+    if check_access(authorized_user, comment, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:
@@ -104,9 +107,9 @@ async def delete_comment(
     comment: comment_dep,
     db: db_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("comments", "delete", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("comments", "delete")],
 ) -> Response:
-    if not rule.allowed and authorized_user.get_user_id() != comment.get_user_id():
+    if check_access(authorized_user, comment, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:

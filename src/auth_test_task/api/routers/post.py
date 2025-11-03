@@ -8,8 +8,8 @@ from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import auth_dep, db_dep, detect_rule, post_dep
 from auth_test_task.db.dal import PostDAL
-from auth_test_task.db.models import RoleRuleModel
-from auth_test_task.schemas import PostCreate, PostResponse, PostUpdate
+from auth_test_task.schemas import PostCreate, PostResponse, PostUpdate, RuleInfo
+from auth_test_task.utils.access import check_access
 
 logger = logging.getLogger("auth_test_task")
 router = APIRouter(
@@ -29,9 +29,12 @@ router = APIRouter(
 async def create_post(
     post_info: PostCreate,
     user: auth_dep,
-    _: Annotated[RoleRuleModel, detect_rule("posts", "create")],
+    rule: Annotated[RuleInfo, detect_rule("posts", "create")],
     db: db_dep,
 ) -> PostResponse:
+    if not rule.owned_rule.allowed:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещен")
+
     try:
         post = await PostDAL.create(user.id, post_info, db)
     except IntegrityError:
@@ -48,9 +51,9 @@ async def create_post(
 async def get_post(
     post: post_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("posts", "read", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("posts", "read")],
 ) -> PostResponse:
-    if not rule.allowed and authorized_user.get_user_id() != post.get_user_id():
+    if check_access(authorized_user, post, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     return PostResponse.model_validate(post)
@@ -78,10 +81,10 @@ async def update_post(
     update_info: PostUpdate,
     post: post_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("posts", "update", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("posts", "update")],
     db: db_dep,
 ) -> PostResponse:
-    if not rule.allowed and authorized_user.get_user_id() != post.get_user_id():
+    if check_access(authorized_user, post, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:
@@ -101,10 +104,10 @@ async def update_post(
 async def delete_post(
     post: post_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("posts", "delete", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("posts", "delete")],
     db: db_dep,
 ) -> Response:
-    if not rule.allowed and authorized_user.get_user_id() != post.get_user_id():
+    if check_access(authorized_user, post, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:
