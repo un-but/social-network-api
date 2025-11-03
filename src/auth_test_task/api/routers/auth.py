@@ -7,13 +7,13 @@ import logging
 from fastapi import APIRouter, HTTPException, Response, status
 
 from auth_test_task.api.dependencies import cookies_dep, db_dep, rd_dep
-from auth_test_task.api.utils import (
+from auth_test_task.db.dal import UserDAL
+from auth_test_task.schemas import AuthResponse, AuthWithEmail, UserResponse
+from auth_test_task.utils.auth import (
     create_user_tokens,
     delete_user_tokens,
     get_user_by_token,
 )
-from auth_test_task.db.dal import UserDAL
-from auth_test_task.schemas import AuthResponse, AuthWithEmail, UserResponse
 
 logger = logging.getLogger("auth_test_task")
 router = APIRouter(

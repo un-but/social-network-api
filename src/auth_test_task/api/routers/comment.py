@@ -55,7 +55,7 @@ async def get_comment(
     authorized_user: auth_dep,
     rule: Annotated[RuleInfo, detect_rule("comments", "read")],
 ) -> CommentResponse:
-    if check_access(authorized_user, comment, rule):
+    if not check_access(authorized_user, comment, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     return CommentResponse.model_validate(comment)
@@ -86,7 +86,7 @@ async def update_comment(
     authorized_user: auth_dep,
     rule: Annotated[RuleInfo, detect_rule("comments", "update")],
 ) -> CommentResponse:
-    if check_access(authorized_user, comment, rule):
+    if not check_access(authorized_user, comment, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:
@@ -109,7 +109,7 @@ async def delete_comment(
     authorized_user: auth_dep,
     rule: Annotated[RuleInfo, detect_rule("comments", "delete")],
 ) -> Response:
-    if check_access(authorized_user, comment, rule):
+    if not check_access(authorized_user, comment, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:

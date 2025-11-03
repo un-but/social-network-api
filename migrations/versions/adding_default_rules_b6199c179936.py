@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.column("action", sa.String),
         sa.column("owned", sa.Boolean),
         sa.column("allowed", sa.Boolean),
-        sa.column("full_view", sa.Boolean),
+        sa.column("full_access", sa.Boolean),
     )
 
     rules = [
@@ -39,7 +39,7 @@ def upgrade() -> None:
                 "action": action,
                 "owned": True,
                 "allowed": True,
-                "full_view": role in ("admin", "manager"),
+                "full_access": role == "admin" or (role == "manager" and action == "read"),
             }
             for role in ("user", "manager", "admin")
             for action in ("create", "read", "update", "delete")
@@ -53,7 +53,7 @@ def upgrade() -> None:
                 "action": action,
                 "owned": False,
                 "allowed": action == "read",
-                "full_view": False,
+                "full_access": False,
             }
             for action in ("create", "read", "update", "delete")
             for object_type in ("users", "posts", "comments", "role_rules")
@@ -66,7 +66,7 @@ def upgrade() -> None:
                 "action": action,
                 "owned": False,
                 "allowed": action == "read" or (action == "delete" and object_type != "role_rules"),
-                "full_view": True,
+                "full_access": action == "read",
             }
             for action in ("create", "read", "update", "delete")
             for object_type in ("users", "posts", "comments", "role_rules")
@@ -79,7 +79,7 @@ def upgrade() -> None:
                 "action": action,
                 "owned": False,
                 "allowed": True,
-                "full_view": True,
+                "full_access": True,
             }
             for action in ("create", "read", "update", "delete")
             for object_type in ("users", "posts", "comments", "role_rules")

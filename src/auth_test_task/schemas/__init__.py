@@ -33,7 +33,6 @@ from auth_test_task.schemas.post import (
 )
 from auth_test_task.schemas.role_rule import (
     RoleRuleCreate,
-    RoleRuleDelete,
     RoleRuleGet,
     RoleRuleResponse,
     RoleRuleUpdate,

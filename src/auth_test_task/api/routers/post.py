@@ -53,7 +53,7 @@ async def get_post(
     authorized_user: auth_dep,
     rule: Annotated[RuleInfo, detect_rule("posts", "read")],
 ) -> PostResponse:
-    if check_access(authorized_user, post, rule):
+    if not check_access(authorized_user, post, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     return PostResponse.model_validate(post)
@@ -84,7 +84,7 @@ async def update_post(
     rule: Annotated[RuleInfo, detect_rule("posts", "update")],
     db: db_dep,
 ) -> PostResponse:
-    if check_access(authorized_user, post, rule):
+    if not check_access(authorized_user, post, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:
@@ -107,7 +107,7 @@ async def delete_post(
     rule: Annotated[RuleInfo, detect_rule("posts", "delete")],
     db: db_dep,
 ) -> Response:
-    if check_access(authorized_user, post, rule):
+    if not check_access(authorized_user, post, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:

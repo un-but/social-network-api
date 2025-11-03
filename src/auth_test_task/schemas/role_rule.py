@@ -29,7 +29,7 @@ class RoleRuleCreate(RoleRuleBase):
     """Схема создания правила роли пользователя."""
 
     allowed: bool
-    full_view: bool
+    full_access: bool
 
 
 class RoleRuleResponse(RoleRuleCreate):
@@ -45,14 +45,15 @@ class RoleRuleUpdate(BaseSchema):
     owned: bool | None = None
 
     allowed: bool | None = None
-    full_view: bool | None = None
-
-
-class RoleRuleDelete(RoleRuleGet):
-    """Схема удаления правила роли пользователя."""
+    full_access: bool | None = None
 
 
 @dataclass
 class RuleInfo:
+    """Класс данных правила.
+
+    Включает в себя правила для своих и чужих объектов
+    """
+
     owned_rule: RoleRuleModel
     alien_rule: RoleRuleModel

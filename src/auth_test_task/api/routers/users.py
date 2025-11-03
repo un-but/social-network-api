@@ -13,14 +13,15 @@ from auth_test_task.api.dependencies import (
     user_dep,
 )
 from auth_test_task.db.dal import UserDAL
-from auth_test_task.db.models import RoleRuleModel
 from auth_test_task.schemas import (
     USER_INCLUDE_TYPE,
+    RuleInfo,
     UserCreate,
     UserFullResponse,
     UserResponse,
     UserUpdate,
 )
+from auth_test_task.utils.access import check_access
 
 logger = logging.getLogger("auth_test_task")
 router = APIRouter(
@@ -31,6 +32,8 @@ router = APIRouter(
     },
 )
 
+# FIXME исправить неправильно работающиек эндпоинты, продумать hard delete
+
 
 @router.post(
     "/",
@@ -40,15 +43,21 @@ router = APIRouter(
 async def create(
     user_info: UserCreate,
     db: db_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("users", "create")],
+    rule: Annotated[RuleInfo, detect_rule("users", "create")],
 ) -> UserResponse | UserFullResponse:
+    if not rule.owned_rule.allowed or (
+        user_info.role != "user" and not rule.owned_rule.full_access
+    ):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещен")
+
     try:
-        user_info.role = user_info.role if rule.full_access else "user"
         user = await UserDAL.create(user_info, db)
     except IntegrityError:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
     else:
-        return (UserFullResponse if rule.full_access else UserResponse).model_validate(user)
+        return (UserFullResponse if rule.owned_rule.full_access else UserResponse).model_validate(
+            user
+        )
 
 
 @router.get(
@@ -59,9 +68,12 @@ async def create(
 async def get_user(
     user: auth_dep,
     db: db_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("users", "read")],
+    rule: Annotated[RuleInfo, detect_rule("users", "read")],
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> UserFullResponse | UserResponse:
+    if not check_access(user, user, rule):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
+
     user = await UserDAL.get_by_id(user.id, db, include)
     return (UserFullResponse if rule.full_access else UserResponse).model_validate(user)
 
@@ -74,15 +86,15 @@ async def get_user(
 async def get_any_user(
     user: user_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("users", "read", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("users", "read")],
     db: db_dep,
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> UserResponse | UserFullResponse:
-    if not rule.allowed and authorized_user.id != user.get_user_id():
+    if not check_access(authorized_user, user, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     user = await UserDAL.get_by_id(user.id, db, include)
-    return (UserFullResponse if rule.full_access else UserResponse).model_validate(user)
+    return (UserFullResponse if rule.owned_rule.full_access else UserResponse).model_validate(user)
 
 
 # @router.get(
@@ -108,10 +120,10 @@ async def update_user(
     update_info: UserUpdate,
     user: user_dep,
     authorized_user: auth_dep,
-    rule: Annotated[RoleRuleModel, detect_rule("users", "read", check_allowed=False)],
+    rule: Annotated[RuleInfo, detect_rule("users", "read")],
     db: db_dep,
 ) -> UserResponse | UserFullResponse:
-    if not rule.allowed and authorized_user.id != user.get_user_id():
+    if not check_access(authorized_user, user, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     try:
@@ -119,7 +131,9 @@ async def update_user(
     except IntegrityError:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
     else:
-        return (UserFullResponse if rule.full_access else UserResponse).model_validate(user)
+        return (UserFullResponse if rule.owned_rule.full_access else UserResponse).model_validate(
+            user
+        )
 
 
 @router.delete(
@@ -131,8 +145,11 @@ async def update_user(
 async def hard_delete_any_user(
     user: user_dep,
     db: db_dep,
-    _: Annotated[RoleRuleModel, detect_rule("users", "delete")],
+    rule: Annotated[RuleInfo, detect_rule("users", "delete")],
 ) -> Response:
+    if not check_access(user, user, rule):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
+
     try:
         await UserDAL.drop(user.id, db)
     except IntegrityError:

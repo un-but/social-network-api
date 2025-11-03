@@ -10,7 +10,6 @@ from auth_test_task.api.dependencies import db_dep, detect_rule, role_rule_dep
 from auth_test_task.db.dal import RoleRuleDAL
 from auth_test_task.schemas import (
     RoleRuleCreate,
-    RoleRuleDelete,
     RoleRuleGet,
     RoleRuleResponse,
     RoleRuleUpdate,
@@ -58,7 +57,7 @@ async def get_role_rule(
     role_rule: role_rule_dep,
     rule: Annotated[RuleInfo, detect_rule("role_rules", "read")],
 ) -> RoleRuleResponse:
-    if check_access(None, role_rule, rule):
+    if not check_access(None, role_rule, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     return RoleRuleResponse.model_validate(role_rule)
@@ -86,7 +85,7 @@ async def update_role_rule(
     rule: Annotated[RuleInfo, detect_rule("role_rules", "update")],
     db: db_dep,
 ) -> RoleRuleResponse:
-    if check_access(None, role_rule, rule):
+    if not check_access(None, role_rule, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
     try:
@@ -95,25 +94,3 @@ async def update_role_rule(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
     else:
         return RoleRuleResponse.model_validate(role_rule)
-
-
-@router.delete(
-    "/{role}/{object_type}/{action}",
-    summary="Удалить правило роли",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_description="Пустой ответ: правило роли успешно удалёно",
-)
-async def delete_role_rule(
-    role_rule: role_rule_dep,
-    rule: Annotated[RuleInfo, detect_rule("role_rules", "delete")],
-    db: db_dep,
-) -> Response:
-    if check_access(None, role_rule, rule):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
-
-    try:
-        await RoleRuleDAL.drop(RoleRuleDelete.model_validate(role_rule), db)
-    except IntegrityError:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
-    else:
-        return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -35,7 +35,7 @@ def upgrade() -> None:
         ),
         sa.Column("owned", sa.Boolean(), nullable=False),
         sa.Column("allowed", sa.Boolean(), nullable=False),
-        sa.Column("full_view", sa.Boolean(), nullable=False),
+        sa.Column("full_access", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("role", "object_type", "action", "owned"),
     )
     op.create_table(
