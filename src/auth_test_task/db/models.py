@@ -141,9 +141,9 @@ class RoleRuleModel(BaseModel):
     role: Mapped[USER_ROLE] = mapped_column(primary_key=True)
     object_type: Mapped[OBJECT_TYPE] = mapped_column(primary_key=True)
     action: Mapped[ACTION_TYPE] = mapped_column(primary_key=True)
-    full_access: Mapped[bool] = mapped_column(default=False)
+    owned: Mapped[bool] = mapped_column(primary_key=True)
 
-    allowed: Mapped[bool] = mapped_column()
+    allowed: Mapped[bool] = mapped_column(default=False)
 
     @override
     def get_user_id(self) -> None:

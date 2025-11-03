@@ -1,4 +1,4 @@
-"""Admin and admin rules init.
+"""Creating an admin.
 
 ID миграции: a33060aafc15
 Изменяет: 8af847b54434
@@ -7,7 +7,6 @@ ID миграции: a33060aafc15
 
 import uuid
 from collections.abc import Sequence
-from datetime import datetime
 
 import bcrypt
 import sqlalchemy as sa
@@ -22,28 +21,6 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Таблица правил для ролей
-    role_rules = sa.table(
-        "role_rules",
-        sa.column("role", sa.String),
-        sa.column("object_type", sa.String),
-        sa.column("action", sa.String),
-        sa.column("full_access", sa.Boolean),
-        sa.column("allowed", sa.Boolean),
-    )
-
-    # Добавление правил для роли 'admin' и объекта 'users'
-    rules = [
-        {
-            "role": "admin",
-            "object_type": "role_rules",
-            "action": action,
-            "full_access": True,
-            "allowed": True,
-        }
-        for action in ("create", "read", "update", "delete")
-    ]
-
     users = sa.table(
         "users",
         sa.column("id", sa.UUID),
@@ -56,8 +33,7 @@ def upgrade() -> None:
     )
 
     admin_id = uuid.uuid4()
-    password_bytes = b"admin_password"
-    password_hash = bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
+    password_hash = bcrypt.hashpw(b"admin_password", bcrypt.gensalt()).decode("utf-8")
 
     op.bulk_insert(
         users,
@@ -72,14 +48,8 @@ def upgrade() -> None:
             },
         ],
     )
-    op.bulk_insert(role_rules, rules)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.execute(
-        """
-        DELETE FROM role_rules
-        WHERE role = 'admin' AND object_type = 'users'
-        """
-    )
+    op.execute("DELETE FROM users WHERE email = 'admin@example.com'")
