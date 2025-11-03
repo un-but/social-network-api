@@ -144,6 +144,7 @@ class RoleRuleModel(BaseModel):
     owned: Mapped[bool] = mapped_column(primary_key=True)
 
     allowed: Mapped[bool] = mapped_column(default=False)
+    full_view: Mapped[bool] = mapped_column(default=False)
 
     @override
     def get_user_id(self) -> None:

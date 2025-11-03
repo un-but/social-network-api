@@ -38,7 +38,8 @@ class RoleRuleDAL:
                 (RoleRuleModel.role == role_rule_info.role)
                 & (RoleRuleModel.object_type == role_rule_info.object_type)
                 & (RoleRuleModel.action == role_rule_info.action)
-            )
+                & (RoleRuleModel.owned == role_rule_info.owned)
+            )  # TODO автоматизировать чтобы не требовалось указывать первичные ключи напрямую
         ):
             return role_rule
 

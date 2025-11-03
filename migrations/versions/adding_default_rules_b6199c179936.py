@@ -1,4 +1,4 @@
-"""Adding rules.
+"""Adding default rules.
 
 ID миграции: b6199c179936
 Изменяет: a33060aafc15
@@ -27,10 +27,11 @@ def upgrade() -> None:
         sa.column("action", sa.String),
         sa.column("owned", sa.Boolean),
         sa.column("allowed", sa.Boolean),
+        sa.column("full_view", sa.Boolean),
     )
 
     rules = [
-        # Разрешение доступа к своим объектам всем по умолчанию
+        # Определение доступа к своим объектам у ролей
         *[
             {
                 "role": role,
@@ -38,12 +39,13 @@ def upgrade() -> None:
                 "action": action,
                 "owned": True,
                 "allowed": True,
+                "full_view": role in ("admin", "manager"),
             }
             for role in ("user", "manager", "admin")
             for action in ("create", "read", "update", "delete")
             for object_type in ("users", "posts", "comments", "role_rules")
         ],
-        # Права для роли user
+        # Определение доступа к чужим объектам у роли user
         *[
             {
                 "role": "user",
@@ -51,23 +53,25 @@ def upgrade() -> None:
                 "action": action,
                 "owned": False,
                 "allowed": action == "read",
+                "full_view": False,
             }
             for action in ("create", "read", "update", "delete")
             for object_type in ("users", "posts", "comments", "role_rules")
         ],
-        # Правила для роли manager
+        # Определение доступа к чужим объектам у роли manager
         *[
             {
                 "role": "manager",
                 "object_type": object_type,
                 "action": action,
                 "owned": False,
-                "allowed": action in ("read", "delete"),
+                "allowed": action == "read" or (action == "delete" and object_type != "role_rules"),
+                "full_view": True,
             }
             for action in ("create", "read", "update", "delete")
-            for object_type in ("users", "posts", "comments")
+            for object_type in ("users", "posts", "comments", "role_rules")
         ],
-        # Правила для роли admin
+        # Определение доступа к чужим объектам у роли admin
         *[
             {
                 "role": "admin",
@@ -75,6 +79,7 @@ def upgrade() -> None:
                 "action": action,
                 "owned": False,
                 "allowed": True,
+                "full_view": True,
             }
             for action in ("create", "read", "update", "delete")
             for object_type in ("users", "posts", "comments", "role_rules")

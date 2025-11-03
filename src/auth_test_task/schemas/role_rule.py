@@ -12,6 +12,7 @@ class RoleRuleBase(BaseSchema):
     role: USER_ROLE
     object_type: OBJECT_TYPE
     action: ACTION_TYPE
+    owned: bool
 
 
 class RoleRuleGet(RoleRuleBase):
@@ -21,8 +22,8 @@ class RoleRuleGet(RoleRuleBase):
 class RoleRuleCreate(RoleRuleBase):
     """Схема создания правила роли пользователя."""
 
-    full_access: bool
     allowed: bool
+    full_view: bool
 
 
 class RoleRuleResponse(RoleRuleCreate):
@@ -35,9 +36,10 @@ class RoleRuleUpdate(BaseSchema):
     role: USER_ROLE | None = None
     object_type: OBJECT_TYPE | None = None
     action: ACTION_TYPE | None = None
-    full_access: bool | None = None
+    owned: bool | None = None
 
     allowed: bool | None = None
+    full_view: bool | None = None
 
 
 class RoleRuleDelete(RoleRuleGet):

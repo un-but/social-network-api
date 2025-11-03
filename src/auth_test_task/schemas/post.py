@@ -37,7 +37,6 @@ class PostResponse(PostChildResponse):
     """Схема для ответа с постом."""
 
     user: UserResponse
-    comments: list[CommentChildPostResponse] | None = None
 
 
 class PostUpdate(BaseSchema):
