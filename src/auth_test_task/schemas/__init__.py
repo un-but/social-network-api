@@ -37,6 +37,7 @@ from auth_test_task.schemas.role_rule import (
     RoleRuleGet,
     RoleRuleResponse,
     RoleRuleUpdate,
+    RuleInfo,
 )
 from auth_test_task.schemas.user import (
     UserCreate,

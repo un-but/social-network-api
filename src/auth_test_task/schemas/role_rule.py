@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from auth_test_task.schemas._common import BaseSchema
 from auth_test_task.schemas._variables import ACTION_TYPE, OBJECT_TYPE, USER_ROLE
+
+if TYPE_CHECKING:
+    from auth_test_task.db.models import RoleRuleModel
 
 
 class RoleRuleBase(BaseSchema):
@@ -44,3 +50,9 @@ class RoleRuleUpdate(BaseSchema):
 
 class RoleRuleDelete(RoleRuleGet):
     """Схема удаления правила роли пользователя."""
+
+
+@dataclass
+class RuleInfo:
+    owned_rule: RoleRuleModel
+    alien_rule: RoleRuleModel
