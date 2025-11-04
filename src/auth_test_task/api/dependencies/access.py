@@ -10,6 +10,7 @@ from auth_test_task.api.dependencies._common import db_dep
 from auth_test_task.api.dependencies.auth import optional_auth_dep
 from auth_test_task.db.dal import RoleRuleDAL
 from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, RoleRuleGet, RuleInfo
+from auth_test_task.utils.access import get_rule
 
 logger = logging.getLogger("auth_test_task")
 
@@ -19,30 +20,12 @@ def detect_rule(
     action: ACTION_TYPE,
 ) -> RuleInfo:
     async def wrapper(
-        user: optional_auth_dep,
+        authorized_user: optional_auth_dep,
         db: db_dep,
     ) -> RuleInfo:
-        if not user:  # TODO добавить роль guest
+        if not authorized_user:  # TODO добавить роль guest
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Необходима авторизация")
 
-        try:
-            rule_info = RuleInfo(
-                *[
-                    await RoleRuleDAL.get(
-                        RoleRuleGet(
-                            role=user.role,
-                            object_type=object_type,
-                            action=action,
-                            owned=owned,
-                        ),
-                        db,
-                    )
-                    for owned in (True, False)
-                ]
-            )
-        except LookupError:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Правило не найдено")
-        else:
-            return rule_info
+        return await get_rule(authorized_user, object_type, action, db)
 
     return Depends(wrapper)  # pyright: ignore[reportAny]

@@ -49,7 +49,7 @@ async def create_role_rule(
 
 
 @router.get(
-    "/{role}/{object_type}/{action}",
+    "/{role}/{object_type}/{action}/{owned}",
     summary="Получить правило роли",
     response_description="Информация о правиле роли: правило роли успешно найдено",
 )

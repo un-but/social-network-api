@@ -8,8 +8,8 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 
 from auth_test_task.api.dependencies._common import cookies_dep, db_dep, rd_dep
-from auth_test_task.api.utils import get_user_by_token
 from auth_test_task.db.models import UserModel
+from auth_test_task.utils.auth import get_user_by_token
 
 logger = logging.getLogger("auth_test_task")
 
