@@ -67,4 +67,3 @@ class UserUpdate(BaseSchema):
     )
 
     role: USER_ROLE | None = None
-    is_active: bool | None = None

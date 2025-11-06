@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
 
@@ -59,5 +59,8 @@ def validate_to_necessary_schema[TFull: BaseSchema, TPartial: BaseSchema](
     suitable_rule = (
         rule.owned_rule if authorized_user.get_user_id() == obj.get_user_id() else rule.alien_rule
     )
+
+    if not suitable_rule.allowed:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     return (full_schema if suitable_rule.full_access else partial_schema).model_validate(obj)

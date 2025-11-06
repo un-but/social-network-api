@@ -48,6 +48,10 @@ class RoleRuleUpdate(BaseSchema):
     full_access: bool | None = None
 
 
+class RoleRuleDelete(RoleRuleGet):
+    """Схема удаления правила роли пользователя."""
+
+
 @dataclass
 class RuleInfo:
     """Класс данных правила.

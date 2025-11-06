@@ -66,3 +66,10 @@ class RoleRuleDAL:
 
         await session.commit()
         return role_rule
+
+    @staticmethod
+    async def drop(role_rule_info: RoleRuleDelete, session: AsyncSession) -> None:
+        role_rule = await RoleRuleDAL.get(role_rule_info, session)
+
+        await session.delete(role_rule)
+        await session.commit()

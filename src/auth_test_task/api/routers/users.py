@@ -66,21 +66,40 @@ async def create(
 
 
 @router.get(
-    "/me",
-    summary="Получить своего пользователя",
+    "/",
+    summary="Получить всех пользователей",
     response_description="Информация о пользователе: пользователь успешно найден",
 )
+async def get_all_users(
+    authorized_user: auth_dep,
+    rule: Annotated[RuleInfo, detect_rule("users", "read")],
+    db: db_dep,
+    include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
+) -> list[UserResponse | UserFullResponse]:
+    users = await UserDAL.get_all(db, include)
+
+    return [
+        validate_to_necessary_schema(user, authorized_user, rule, UserFullResponse, UserResponse)
+        for user in users
+    ]
+
+
+@router.get(
+    "/me",
+    summary="Получить своего пользователя",
+    response_description="Информация о пользователях: список успешно сформирован",
+)
 async def get_user(
-    user: auth_dep,
+    authorized_user: auth_dep,
     db: db_dep,
     rule: Annotated[RuleInfo, detect_rule("users", "read")],
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> UserFullResponse | UserResponse:
-    if not check_access(user, user, rule):
+    if rule.owned_rule.allowed:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
 
-    user = await UserDAL.get_by_id(user.id, db, include)
-    return validate_to_necessary_schema(user, user, rule, UserFullResponse, UserResponse)
+    user = await UserDAL.get_by_id(authorized_user.id, db, include)
+    return validate_to_necessary_schema(user, authorized_user, rule, UserFullResponse, UserResponse)
 
 
 @router.get(
@@ -100,20 +119,6 @@ async def get_any_user(
 
     user = await UserDAL.get_by_id(user.id, db, include)
     return validate_to_necessary_schema(user, user, rule, UserFullResponse, UserResponse)
-
-
-# @router.get(
-#     "/",
-#     summary="Получить всех пользователей",
-#     response_description="Информация о пользователях: список успешно сформирован",
-# )
-# async def get_all_users(
-#     db: db_dep,
-#     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
-# ) -> list[UserFullResponse | UserResponse]:
-#     users = await UserDAL.get_all(db, include)
-#
-#     return [UserResponse.model_validate(user) for user in users]
 
 
 @router.patch(
@@ -144,20 +149,24 @@ async def update_user(
 
 @router.delete(
     "/{user_id}",
-    summary="Удалить любого пользователя вместе с данными",
+    summary="Удалить любого пользователя безопасно или вместе с данными",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Пустой ответ: пользователь успешно удалён",
 )
-async def hard_delete_any_user(
+async def delete_any_user(
     user: user_dep,
     db: db_dep,
     rule: Annotated[RuleInfo, detect_rule("users", "delete")],
+    hard_delete: bool = Query(default=False),
 ) -> Response:
     if not check_access(user, user, rule):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     try:
-        await UserDAL.drop(user.id, db)
+        if hard_delete:
+            await UserDAL.drop(user.id, db)
+        else:
+            await UserDAL.deactivate(user.id, db)
     except IntegrityError:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
     else:

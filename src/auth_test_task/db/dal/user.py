@@ -94,6 +94,13 @@ class UserDAL:
         return user
 
     @staticmethod
+    async def deactivate(user_id: uuid.UUID, session: AsyncSession) -> None:
+        user = await UserDAL.get_by_id(user_id, session)
+
+        user.is_active = False
+        await session.commit()
+
+    @staticmethod
     async def drop(user_id: uuid.UUID, session: AsyncSession) -> None:
         user = await UserDAL.get_by_id(user_id, session)
 

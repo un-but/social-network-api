@@ -3,18 +3,12 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from auth_test_task.api.dependencies import db_dep, detect_rule, role_rule_dep
 from auth_test_task.db.dal import RoleRuleDAL
-from auth_test_task.schemas import (
-    RoleRuleCreate,
-    RoleRuleGet,
-    RoleRuleResponse,
-    RoleRuleUpdate,
-    RuleInfo,
-)
+from auth_test_task.schemas import RoleRuleGet, RoleRuleResponse, RoleRuleUpdate, RuleInfo
 from auth_test_task.utils.access import check_access
 
 logger = logging.getLogger("auth_test_task")
@@ -25,27 +19,6 @@ router = APIRouter(
         status.HTTP_404_NOT_FOUND: {"description": "Правило роли не найдено"},
     },
 )
-
-
-@router.post(
-    "/",
-    summary="Создать правило роли",
-    response_description="Информация о правиле роли: правило роли успешно создано",
-)
-async def create_role_rule(
-    role_rule_info: RoleRuleCreate,
-    db: db_dep,
-    rule: Annotated[RuleInfo, detect_rule("role_rules", "create")],
-) -> RoleRuleResponse:
-    if not rule.alien_rule.allowed:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещен")
-
-    try:
-        role_rule = await RoleRuleDAL.create(role_rule_info, db)
-    except IntegrityError:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
-    else:
-        return RoleRuleResponse.model_validate(role_rule)
 
 
 @router.get(
@@ -75,7 +48,7 @@ async def get_role_rule(
 
 
 @router.patch(
-    "/{role}/{object_type}/{action}",
+    "/{role}/{object_type}/{action}/{owned}",
     summary="Обновить правило роли",
     response_description="Информация о правиле роли: правило роли успешно обновлёно",
 )
