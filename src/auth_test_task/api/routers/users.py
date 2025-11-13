@@ -32,8 +32,6 @@ router = APIRouter(
     },
 )
 
-# FIXME исправить неправильно работающие эндпоинты, продумать hard delete
-
 
 @router.post(
     "/",
@@ -47,7 +45,8 @@ async def create(
     getting_rule: Annotated[RuleInfo, detect_rule("users", "read")],
 ) -> UserResponse | UserFullResponse:
     if not rule.owned_rule.allowed or (
-        user_info.role != "user" and not rule.owned_rule.full_access
+        user_info.role != "user"  # TODO переделать на динамическое определение
+        and not rule.owned_rule.full_access
     ):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещен")
 

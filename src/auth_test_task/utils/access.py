@@ -64,3 +64,19 @@ def validate_to_necessary_schema[TFull: BaseSchema, TPartial: BaseSchema](
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
 
     return (full_schema if suitable_rule.full_access else partial_schema).model_validate(obj)
+
+
+def validate_to_schema[T: BaseSchema](
+    obj: BaseModel,
+    authorized_user: UserModel,
+    rule: RuleInfo,
+    schema: type[T],
+) -> T:
+    suitable_rule = (
+        rule.owned_rule if authorized_user.get_user_id() == obj.get_user_id() else rule.alien_rule
+    )
+
+    if not suitable_rule.allowed:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
+
+    return schema.model_validate(obj)

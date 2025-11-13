@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from auth_test_task.api.dependencies import db_dep, detect_rule, role_rule_dep
 from auth_test_task.db.dal import RoleRuleDAL
 from auth_test_task.schemas import RoleRuleGet, RoleRuleResponse, RoleRuleUpdate, RuleInfo
-from auth_test_task.utils.access import check_access
+from auth_test_task.utils.access import check_access, validate_to_schema
 
 logger = logging.getLogger("auth_test_task")
 router = APIRouter(
@@ -36,15 +36,20 @@ async def get_role_rule(
     return RoleRuleResponse.model_validate(role_rule)
 
 
-# @router.get(
-#     "/",
-#     summary="Получить все правила ролей",
-#     response_description="Информация о правилах ролей: список успешно сформирован",
-# )
-# async def get_all_role_rules(db: db_dep) -> list[RoleRuleResponse]:
-#     role_rules = await RoleRuleDAL.get_all(db)
-#
-#     return [RoleRuleResponse.model_validate(role_rule) for role_rule in role_rules]
+@router.get(
+    "/",
+    summary="Получить все правила ролей",
+    response_description="Информация о правилах ролей: список успешно сформирован",
+)
+async def get_all_role_rules(
+    rule: Annotated[RuleInfo, detect_rule("users", "read")],
+    db: db_dep,
+) -> list[RoleRuleResponse]:
+    if not rule.alien_rule.allowed:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
+
+    role_rules = await RoleRuleDAL.get_all(db)
+    return [RoleRuleResponse.model_validate(role_rule) for role_rule in role_rules]
 
 
 @router.patch(
