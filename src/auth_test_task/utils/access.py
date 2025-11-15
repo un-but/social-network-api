@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 
 from fastapi import HTTPException, status
 
 from auth_test_task.db.dal import RoleRuleDAL
+from auth_test_task.db.models import RoleRuleModel
 from auth_test_task.schemas import RoleRuleGet, RuleInfo
 
 if TYPE_CHECKING:
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
     from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, BaseSchema
 
 
-async def get_rule(
+async def get_rule_info(
     authorized_user: UserModel,
     object_type: OBJECT_TYPE,
     action: ACTION_TYPE,
@@ -43,40 +44,40 @@ async def get_rule(
         return rule_info
 
 
-def check_access(user: UserModel | None, obj: BaseModel, rule: RuleInfo) -> bool:
+@overload
+def check_rule(
+    rule: RoleRuleModel,
+    raise_err: Literal[True] = True,
+) -> RoleRuleModel: ...
+
+
+@overload
+def check_rule(
+    rule: RoleRuleModel,
+    raise_err: Literal[False],
+) -> RoleRuleModel | None: ...
+
+
+def check_rule(
+    rule: RoleRuleModel,
+    raise_err: bool = True,
+) -> RoleRuleModel | None:
+    if rule.allowed:
+        return rule
+
+    if raise_err:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, f"Доступ к операции {rule.action} запрещён")
+
+    return None
+
+
+def choose_rule(
+    obj: BaseModel,
+    authorized_user: UserModel,
+    rule_info: RuleInfo,
+) -> RoleRuleModel:
     return (
-        user and user.get_user_id() == obj.get_user_id() and rule.owned_rule.allowed
-    ) or rule.alien_rule.allowed
-
-
-def validate_to_necessary_schema[TFull: BaseSchema, TPartial: BaseSchema](
-    obj: BaseModel,
-    authorized_user: UserModel,
-    rule: RuleInfo,
-    full_schema: type[TFull],
-    partial_schema: type[TPartial],
-) -> TFull | TPartial:
-    suitable_rule = (
-        rule.owned_rule if authorized_user.get_user_id() == obj.get_user_id() else rule.alien_rule
+        rule_info.owned_rule
+        if authorized_user and obj and authorized_user.get_user_id() == obj.get_user_id()
+        else rule_info.alien_rule
     )
-
-    if not suitable_rule.allowed:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
-
-    return (full_schema if suitable_rule.full_access else partial_schema).model_validate(obj)
-
-
-def validate_to_schema[T: BaseSchema](
-    obj: BaseModel,
-    authorized_user: UserModel,
-    rule: RuleInfo,
-    schema: type[T],
-) -> T:
-    suitable_rule = (
-        rule.owned_rule if authorized_user.get_user_id() == obj.get_user_id() else rule.alien_rule
-    )
-
-    if not suitable_rule.allowed:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Недостаточно прав")
-
-    return schema.model_validate(obj)

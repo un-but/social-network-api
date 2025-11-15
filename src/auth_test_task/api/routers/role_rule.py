@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from auth_test_task.api.dependencies import db_dep, detect_rule, role_rule_dep
 from auth_test_task.db.dal import RoleRuleDAL
 from auth_test_task.schemas import RoleRuleGet, RoleRuleResponse, RoleRuleUpdate, RuleInfo
-from auth_test_task.utils.access import check_access, validate_to_schema
+from auth_test_task.utils.access import check_rule
 
 logger = logging.getLogger("auth_test_task")
 router = APIRouter(
@@ -20,6 +20,8 @@ router = APIRouter(
     },
 )
 
+# В данном router'е везде будет применяться alien_rule, так как у правил не может быть владельца
+
 
 @router.get(
     "/{role}/{object_type}/{action}/{owned}",
@@ -28,11 +30,9 @@ router = APIRouter(
 )
 async def get_role_rule(
     role_rule: role_rule_dep,
-    rule: Annotated[RuleInfo, detect_rule("role_rules", "read")],
+    rule_info: Annotated[RuleInfo, detect_rule("role_rules", "read")],
 ) -> RoleRuleResponse:
-    if not check_access(None, role_rule, rule):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
-
+    check_rule(rule_info.alien_rule)
     return RoleRuleResponse.model_validate(role_rule)
 
 
@@ -42,13 +42,12 @@ async def get_role_rule(
     response_description="Информация о правилах ролей: список успешно сформирован",
 )
 async def get_all_role_rules(
-    rule: Annotated[RuleInfo, detect_rule("users", "read")],
+    rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
     db: db_dep,
 ) -> list[RoleRuleResponse]:
-    if not rule.alien_rule.allowed:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
-
+    check_rule(rule_info.alien_rule)
     role_rules = await RoleRuleDAL.get_all(db)
+
     return [RoleRuleResponse.model_validate(role_rule) for role_rule in role_rules]
 
 
@@ -60,15 +59,16 @@ async def get_all_role_rules(
 async def update_role_rule(
     update_info: RoleRuleUpdate,
     role_rule: role_rule_dep,
-    rule: Annotated[RuleInfo, detect_rule("role_rules", "update")],
+    update_rule_info: Annotated[RuleInfo, detect_rule("role_rules", "update")],
+    getting_rule_info: Annotated[RuleInfo, detect_rule("role_rules", "read")],
     db: db_dep,
 ) -> RoleRuleResponse:
-    if not check_access(None, role_rule, rule):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Доступ запрещён")
+    check_rule(update_rule_info.alien_rule)
 
     try:
         role_rule = await RoleRuleDAL.update(RoleRuleGet.model_validate(role_rule), update_info, db)
     except IntegrityError:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
     else:
+        check_rule(getting_rule_info.alien_rule)
         return RoleRuleResponse.model_validate(role_rule)
