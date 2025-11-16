@@ -50,7 +50,7 @@ class UserResponse(UserBase):
 class UserFullResponse(UserResponse):
     """Схема для ответа со всеми данными пользователя."""
 
-    is_active: bool = Field(exclude=True)
+    is_active: bool
     role: USER_ROLE
 
 

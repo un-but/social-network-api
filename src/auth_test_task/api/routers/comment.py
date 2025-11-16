@@ -1,7 +1,6 @@
 """Эндпоинты, отвечающие за управление комментариями."""
 
 import logging
-from optparse import check_choice
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Response, status

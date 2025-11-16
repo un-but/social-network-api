@@ -45,7 +45,7 @@ class PostDAL:
         session: AsyncSession,
     ) -> Sequence[PostModel]:
         posts = await session.scalars(select(PostModel))
-        return posts.all()
+        return posts.unique().all()
 
     @staticmethod
     async def update(

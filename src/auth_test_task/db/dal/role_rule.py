@@ -12,7 +12,7 @@ from auth_test_task.db.models import RoleRuleModel
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    from auth_test_task.schemas import RoleRuleCreate, RoleRuleDelete, RoleRuleGet, RoleRuleUpdate
+    from auth_test_task.schemas import RoleRuleCreate, RoleRuleGet, RoleRuleUpdate
 
 
 class RoleRuleDAL:
@@ -51,7 +51,7 @@ class RoleRuleDAL:
         session: AsyncSession,
     ) -> Sequence[RoleRuleModel]:
         role_rules = await session.scalars(select(RoleRuleModel))
-        return role_rules.all()
+        return role_rules.unique().all()
 
     @staticmethod
     async def update(

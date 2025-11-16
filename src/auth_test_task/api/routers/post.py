@@ -9,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 from auth_test_task.api.dependencies import auth_dep, db_dep, detect_rule, post_dep
 from auth_test_task.db.dal import PostDAL
 from auth_test_task.schemas import PostCreate, PostResponse, PostUpdate, RuleInfo
-from auth_test_task.utils import auth
 from auth_test_task.utils.access import check_rule, choose_rule
 
 logger = logging.getLogger("auth_test_task")

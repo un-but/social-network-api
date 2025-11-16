@@ -121,7 +121,7 @@ async def get_any_user(
 
 @router.patch(
     "/{user_id}",
-    summary="Обновить или удалить любого пользователя",
+    summary="Обновить любого пользователя",
     response_description="Информация о пользователе: пользователь успешно обновлён/удалён",
 )
 async def update_user(
@@ -160,10 +160,12 @@ async def delete_any_user(
     rule_info: Annotated[RuleInfo, detect_rule("users", "delete")],
     hard_delete: bool = Query(default=False),
 ) -> Response:
-    check_rule(choose_rule(user, authorized_user, rule_info))
+    suitable_rule = choose_rule(user, authorized_user, rule_info)
+    check_rule(suitable_rule)
 
     try:
         if hard_delete:
+            check_rule(suitable_rule, require_full_access=True)
             await UserDAL.drop(user.id, db)
         else:
             await UserDAL.deactivate(user.id, db)

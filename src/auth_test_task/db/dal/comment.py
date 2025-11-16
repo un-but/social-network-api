@@ -52,7 +52,7 @@ class CommentDAL:
         session: AsyncSession,
     ) -> Sequence[CommentModel]:
         comments = await session.scalars(select(CommentModel))
-        return comments.all()
+        return comments.unique().all()
 
     @staticmethod
     async def update(

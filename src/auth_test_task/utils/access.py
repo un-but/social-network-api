@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from auth_test_task.db.models import BaseModel, UserModel
-    from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, BaseSchema
+    from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE
 
 
 async def get_rule_info(
@@ -47,6 +47,7 @@ async def get_rule_info(
 @overload
 def check_rule(
     rule: RoleRuleModel,
+    require_full_access: bool = False,
     raise_err: Literal[True] = True,
 ) -> RoleRuleModel: ...
 
@@ -54,15 +55,17 @@ def check_rule(
 @overload
 def check_rule(
     rule: RoleRuleModel,
-    raise_err: Literal[False],
+    require_full_access: bool = False,
+    raise_err: Literal[False] = False,
 ) -> RoleRuleModel | None: ...
 
 
 def check_rule(
     rule: RoleRuleModel,
+    require_full_access: bool = False,
     raise_err: bool = True,
 ) -> RoleRuleModel | None:
-    if rule.allowed:
+    if rule.allowed and (not require_full_access or rule.full_access):
         return rule
 
     if raise_err:

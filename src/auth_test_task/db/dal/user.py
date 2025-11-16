@@ -77,7 +77,7 @@ class UserDAL:
                 *(selectinload(getattr(UserModel, include_attr)) for include_attr in include),
             ),
         )
-        return users.all()
+        return users.unique().all()
 
     @staticmethod
     async def update(

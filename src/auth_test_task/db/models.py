@@ -142,6 +142,7 @@ class RoleRuleModel(BaseModel):
     object_type: Mapped[OBJECT_TYPE] = mapped_column(primary_key=True)
     action: Mapped[ACTION_TYPE] = mapped_column(primary_key=True)
     owned: Mapped[bool] = mapped_column(primary_key=True)
+    # TODO(UnBut) обновить поля для определения роли владельца объекта (subject_role и object_role)
 
     allowed: Mapped[bool] = mapped_column(default=False)
     full_access: Mapped[bool] = mapped_column(default=False)
