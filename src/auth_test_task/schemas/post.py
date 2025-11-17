@@ -11,7 +11,7 @@ from pydantic import Field
 from auth_test_task.schemas._common import BaseSchema
 
 if TYPE_CHECKING:  # Требуется для корректной работы отложенного импорта
-    from auth_test_task.schemas import CommentBaseResponse, CommentChildPostResponse, UserResponse
+    from auth_test_task.schemas import CommentChildPostResponse, UserResponse
 
 
 class PostCreate(BaseSchema):
@@ -30,7 +30,7 @@ class PostBaseResponse(PostCreate):
 class PostChildResponse(PostBaseResponse):
     """Схема для ответа в качестве дочернего объекта."""
 
-    comments: list[CommentBaseResponse] | None = None
+    comments: list[CommentChildPostResponse] | None = None
 
 
 class PostResponse(PostChildResponse):

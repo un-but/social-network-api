@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 from sqlalchemy.orm import DeclarativeBase
 
 
 class BaseSchema(BaseModel):
     """Базовый класс для схем."""
 
-    model_config = {
+    model_config: ClassVar[ConfigDict] = {
         "from_attributes": True,
         "extra": "ignore",
         "arbitrary_types_allowed": True,

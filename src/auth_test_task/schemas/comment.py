@@ -11,7 +11,7 @@ from pydantic import Field
 from auth_test_task.schemas._common import BaseSchema
 
 if TYPE_CHECKING:  # Требуется для корректной работы отложенного импорта
-    from auth_test_task.schemas import PostChildResponse, PostResponse, UserResponse
+    from auth_test_task.schemas import PostChildResponse, UserResponse
 
 
 class CommentCreate(BaseSchema):

@@ -7,8 +7,8 @@
 
 В классе Config все поля - классы pydantic, при инициализации в него нельзя передавать значения.
 
-В Config все поля являются значениями в которых у всех полей должны быть значения
-from_source(Source.{ИСТОЧНИК_ПОЛЯ})
+В Config все поля являются объектами в которых у всех полей должны быть значения
+Field(json_schema_extra={"source": "ИСТОЧНИК_ПОЛЯ"})
 """
 
 from __future__ import annotations
@@ -16,48 +16,34 @@ from __future__ import annotations
 import os
 import tomllib
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, get_type_hints, override
 
-from pydantic import BaseModel, Field, SecretStr
-from pydantic.fields import FieldInfo
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
-
-# Функция для создания поля с указанием источника
-def from_source(source: Literal["env", "toml"], default: Any = ..., **kwargs: Any) -> Any:
-    """Создает поле с учетом источника данных.
-
-    Args:
-        source (Source): источник данных.
-        default (Source, optional): значение поля по умолчанию. Если не указано то ...
-        kwargs (Any): аргументы передаваемые в Field из Pydantic
-
-    Returns:
-        Any: значение поля
-
-    """
-    return Field(default, json_schema_extra={"source": source}, **kwargs)
-
+if TYPE_CHECKING:
+    from pydantic.fields import FieldInfo
 
 ########## Модели данных ##########
 
 
-class APIConfig(BaseModel):
+class APIConfig(PydanticBaseModel):
     """Настройки FastAPI приложения."""
 
-    name: str = from_source("toml")
+    name: str = Field(json_schema_extra={"source": "toml"})
 
-    jwt_secret: SecretStr = from_source("env")
-    jwt_access_expire_seconds: int = from_source("toml")
-    jwt_refresh_expire_days: int = from_source("toml")
+    jwt_secret: SecretStr = Field(json_schema_extra={"source": "env"})
+    jwt_access_expire_seconds: int = Field(json_schema_extra={"source": "toml"})
+    jwt_refresh_expire_days: int = Field(json_schema_extra={"source": "toml"})
 
 
-class DatabaseConfig(BaseModel):
+class DatabaseConfig(PydanticBaseModel):
     """Настройки работы с базой данных через SQLAlchemy."""
 
-    ps_url: SecretStr = from_source("env")
-    rd_url: SecretStr = from_source("env")
-    echo: bool = from_source("toml")
+    ps_url: SecretStr = Field(json_schema_extra={"source": "env"})
+    rd_url: SecretStr = Field(json_schema_extra={"source": "env"})
+    echo: bool = Field(json_schema_extra={"source": "toml"})
 
 
 ########## Класс настроек ##########
@@ -66,7 +52,7 @@ class DatabaseConfig(BaseModel):
 class Config(BaseSettings):
     """Создает объект с настройками приложения."""
 
-    model_config = SettingsConfigDict(
+    model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
@@ -75,7 +61,9 @@ class Config(BaseSettings):
     api: APIConfig
     database: DatabaseConfig
 
+    # Переопределение функции позволяет настроить получение значений из источников
     @classmethod
+    @override
     def settings_customise_sources(
         cls,
         settings_cls: type[BaseSettings],
@@ -84,35 +72,54 @@ class Config(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Собирает кортеж настроенных источников, из которых берутся значения для конфигурации."""
+
         class TomlSource(PydanticBaseSettingsSource):
+            @override
             def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
                 return super().get_field_value(field, field_name)
 
+            @override
             def __call__(self) -> dict[str, Any]:
+                """Спарсить файл config.toml в словарь."""
                 with Path("config.toml").open("rb") as f:
                     return tomllib.load(f)
 
         class EnvSource(PydanticBaseSettingsSource):
+            @override
             def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
                 return super().get_field_value(field, field_name)
 
+            @override
             def __call__(self) -> dict[str, Any]:
+                """Собрать все поля класса настроек и спарсить все подполя для них."""
                 return {
-                    field_name: self._parse_sub_fields(field, field_name)
-                    for field_name, field in settings_cls.model_fields.items()
+                    field_name: self._parse_sub_fields(field_name)
+                    for field_name in settings_cls.model_fields
                 }
 
-            def _parse_sub_fields(self, field: FieldInfo, field_name: str) -> dict[str, Any]:
-                try:
-                    return {
-                        sub_field_name: os.environ[f"{field_name}_{sub_field_name}".upper()]
-                        for sub_field_name, sub_field in field.annotation.model_fields.items()
-                        if sub_field.json_schema_extra.get("source") == "env"
-                        and f"{field_name}_{sub_field_name}".upper() in os.environ
-                    }
-                except AttributeError:  # Если у полей не указан источник
-                    error_msg = "Нарушены правила работы с конфигом, описанные в начале модуля"
-                    raise AttributeError(error_msg)
+            def _parse_sub_fields(self, field_name: str) -> dict[str, Any]:
+                """Спарсить все подполя из переменных окружения."""
+                sub_fields: dict[str, Any] = {}
+                field_class = get_type_hints(Config)[field_name]
+
+                if not issubclass(field_class, PydanticBaseModel):
+                    error_msg = "В классе Config указано поле, не являющееся схемой Pydantic"
+                    raise TypeError(error_msg)
+
+                # Перебор всех подполей их класса
+                for sub_field_name, sub_field in field_class.model_fields.items():
+                    env_name = f"{field_name}_{sub_field_name}".upper()
+                    extra_data = sub_field.json_schema_extra
+
+                    if not isinstance(extra_data, dict):
+                        error_msg = f"В поле схемы {field_name} не был передан источник"
+                        raise TypeError(error_msg)
+
+                    if extra_data.get("source") == "env" and env_name in os.environ:
+                        sub_fields[sub_field_name] = os.environ[env_name]
+
+                return sub_fields
 
         return (EnvSource(settings_cls), TomlSource(settings_cls))
 
