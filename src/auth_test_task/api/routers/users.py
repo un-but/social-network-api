@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from auth_test_task.api.dependencies import (
     auth_dep,
     db_dep,
-    detect_rule,
+    find_rule_info,
     user_dep,
 )
 from auth_test_task.db.dal import UserDAL
@@ -41,8 +41,8 @@ router = APIRouter(
 async def create(
     user_info: UserCreate,
     db: db_dep,
-    create_rule_info: Annotated[RuleInfo, detect_rule("users", "create")],
-    getting_rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
+    create_rule_info: Annotated[RuleInfo, find_rule_info("users", "create")],
+    getting_rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
 ) -> UserResponse | UserFullResponse:
     check_rule(create_rule_info.owned_rule)
 
@@ -64,12 +64,11 @@ async def create(
     response_description="Информация о пользователе: пользователь успешно найден",
 )
 async def get_all_users(
-    authorized_user: auth_dep,
-    rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
+    rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
     db: db_dep,
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> list[UserResponse | UserFullResponse]:
-    check_rule(rule_info.alien_rule)  # TODO(UnBut) сделать запрос данных в зависимости от правил
+    check_rule(rule_info.alien_rule)
     users = await UserDAL.get_all(db, include)
 
     return [
@@ -88,7 +87,7 @@ async def get_all_users(
 async def get_user(
     authorized_user: auth_dep,
     db: db_dep,
-    rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
+    rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> UserFullResponse | UserResponse:
     check_rule(rule_info.owned_rule)  # Используется owned_rule так как это всегда сам пользователь
@@ -107,7 +106,7 @@ async def get_user(
 async def get_any_user(
     user: user_dep,
     authorized_user: auth_dep,
-    rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
+    rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
     db: db_dep,
     include: tuple[USER_INCLUDE_TYPE, ...] = Query(default=()),
 ) -> UserResponse | UserFullResponse:
@@ -128,8 +127,8 @@ async def update_user(
     update_info: UserUpdate,
     user: user_dep,
     authorized_user: auth_dep,
-    update_rule_info: Annotated[RuleInfo, detect_rule("users", "update")],
-    getting_rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
+    update_rule_info: Annotated[RuleInfo, find_rule_info("users", "update")],
+    getting_rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
     db: db_dep,
 ) -> UserResponse | UserFullResponse:
     check_rule(choose_rule(user, authorized_user, update_rule_info))
@@ -157,7 +156,7 @@ async def delete_any_user(
     user: user_dep,
     authorized_user: auth_dep,
     db: db_dep,
-    rule_info: Annotated[RuleInfo, detect_rule("users", "delete")],
+    rule_info: Annotated[RuleInfo, find_rule_info("users", "delete")],
     hard_delete: bool = Query(default=False),
 ) -> Response:
     suitable_rule = choose_rule(user, authorized_user, rule_info)

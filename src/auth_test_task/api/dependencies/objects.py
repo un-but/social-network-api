@@ -18,7 +18,7 @@ logger = logging.getLogger("auth_test_task")
 
 async def receive_role_rule(
     db: db_dep,
-    role_rule: RoleRuleGet = Path(...),
+    role_rule: RoleRuleGet = Path(...),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> RoleRuleModel:
     try:
         return await RoleRuleDAL.get(role_rule, db)

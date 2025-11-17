@@ -37,11 +37,6 @@ class RoleRuleResponse(RoleRuleBase):
 class RoleRuleUpdate(BaseSchema):
     """Схема обновления правила роли пользователя."""
 
-    role: USER_ROLE | None = None
-    object_type: OBJECT_TYPE | None = None
-    action: ACTION_TYPE | None = None
-    owned: bool | None = None
-
     allowed: bool | None = None
     full_access: bool | None = None
 

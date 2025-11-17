@@ -94,11 +94,11 @@ class Config(BaseSettings):
             def __call__(self) -> dict[str, Any]:
                 """Собрать все поля класса настроек и спарсить все подполя для них."""
                 return {
-                    field_name: self._parse_sub_fields(field_name)
+                    field_name: self._parse_sub_fields_from_environment(field_name)
                     for field_name in settings_cls.model_fields
                 }
 
-            def _parse_sub_fields(self, field_name: str) -> dict[str, Any]:
+            def _parse_sub_fields_from_environment(self, field_name: str) -> dict[str, Any]:
                 """Спарсить все подполя из переменных окружения."""
                 sub_fields: dict[str, Any] = {}
                 field_class = get_type_hints(Config)[field_name]
@@ -119,7 +119,12 @@ class Config(BaseSettings):
                     if extra_data.get("source") == "env" and env_name in os.environ:
                         sub_fields[sub_field_name] = os.environ[env_name]
 
+                if not sub_fields:
+                    return _parse_sub_fields_from_yml(field_name)
+
                 return sub_fields
+
+            def _parse_sub_fields_from_yml(self, field_name: str) -> dict[str, Any]: ...
 
         return (EnvSource(settings_cls), TomlSource(settings_cls))
 

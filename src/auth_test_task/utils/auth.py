@@ -134,19 +134,20 @@ async def delete_user_tokens(
     response: Response,
 ) -> None:
     try:
-        payload: dict[str, Any] = jwt.decode(
-            cookies.refresh_token,
-            config.api.jwt_secret.get_secret_value(),
-            algorithms=["HS256"],
-        )
-
-        if payload.get("type") != "refresh":
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED,
-                "Токен не содержит необходимой информации",
+        if cookies.refresh_token:
+            payload: dict[str, Any] = jwt.decode(
+                cookies.refresh_token,
+                config.api.jwt_secret.get_secret_value(),
+                algorithms=["HS256"],
             )
 
-        await rd.delete(f"refresh_token:{payload['sub']}")
+            if payload.get("type") != "refresh":
+                raise HTTPException(
+                    status.HTTP_401_UNAUTHORIZED,
+                    "Токен не содержит необходимой информации",
+                )
+
+            await rd.delete(f"refresh_token:{payload['sub']}")
     except jwt.PyJWTError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Некорректный refresh токен")
     except LookupError:

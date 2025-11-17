@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
-from auth_test_task.api.dependencies import db_dep, detect_rule, role_rule_dep
+from auth_test_task.api.dependencies import db_dep, find_rule_info, role_rule_dep
 from auth_test_task.db.dal import RoleRuleDAL
 from auth_test_task.schemas import RoleRuleGet, RoleRuleResponse, RoleRuleUpdate, RuleInfo
 from auth_test_task.utils.access import check_rule
@@ -30,7 +30,7 @@ router = APIRouter(
 )
 async def get_role_rule(
     role_rule: role_rule_dep,
-    rule_info: Annotated[RuleInfo, detect_rule("role_rules", "read")],
+    rule_info: Annotated[RuleInfo, find_rule_info("role_rules", "read")],
 ) -> RoleRuleResponse:
     check_rule(rule_info.alien_rule)
     return RoleRuleResponse.model_validate(role_rule)
@@ -42,7 +42,7 @@ async def get_role_rule(
     response_description="Информация о правилах ролей: список успешно сформирован",
 )
 async def get_all_role_rules(
-    rule_info: Annotated[RuleInfo, detect_rule("users", "read")],
+    rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
     db: db_dep,
 ) -> list[RoleRuleResponse]:
     check_rule(rule_info.alien_rule)
@@ -59,8 +59,8 @@ async def get_all_role_rules(
 async def update_role_rule(
     update_info: RoleRuleUpdate,
     role_rule: role_rule_dep,
-    update_rule_info: Annotated[RuleInfo, detect_rule("role_rules", "update")],
-    getting_rule_info: Annotated[RuleInfo, detect_rule("role_rules", "read")],
+    update_rule_info: Annotated[RuleInfo, find_rule_info("role_rules", "update")],
+    getting_rule_info: Annotated[RuleInfo, find_rule_info("role_rules", "read")],
     db: db_dep,
 ) -> RoleRuleResponse:
     check_rule(update_rule_info.alien_rule)

@@ -8,14 +8,13 @@ from fastapi import Depends, HTTPException, status
 
 from auth_test_task.api.dependencies._common import db_dep
 from auth_test_task.api.dependencies.auth import optional_auth_dep
-from auth_test_task.db.dal import RoleRuleDAL
-from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, RoleRuleGet, RuleInfo
+from auth_test_task.schemas import ACTION_TYPE, OBJECT_TYPE, RuleInfo
 from auth_test_task.utils.access import get_rule_info
 
 logger = logging.getLogger("auth_test_task")
 
 
-def detect_rule(
+def find_rule_info(
     object_type: OBJECT_TYPE,
     action: ACTION_TYPE,
 ) -> RuleInfo:

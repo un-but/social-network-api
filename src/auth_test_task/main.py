@@ -1,7 +1,8 @@
 """Модуль для запуска API.
 
-Для корректной работы требуются правильно настроенные файлы config.toml и .env.
-Данные о полях в них можно найти в файле src/auth_test_task/schemas/_configuration.py.
+Для корректной работы требуются правильно настроенные файлы docker-compose.yml и config.toml.
+Для запуска миграций требуется перенести переменные приложения в .env из docker-compose.yml.
+Данные всех настройках можно найти в файле src/auth_test_task/schemas/_configuration.py.
 """
 
 from __future__ import annotations
