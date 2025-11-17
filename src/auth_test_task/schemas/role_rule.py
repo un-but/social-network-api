@@ -11,6 +11,8 @@ from auth_test_task.schemas._variables import ACTION_TYPE, OBJECT_TYPE, USER_ROL
 if TYPE_CHECKING:
     from auth_test_task.db.models import RoleRuleModel
 
+# Схемы для создания и удаления отсутствуют, так как не предустматриваются после запуска приложения
+
 
 class RoleRuleBase(BaseSchema):
     """Базовая схема правила роли пользователя."""
@@ -25,15 +27,11 @@ class RoleRuleGet(RoleRuleBase):
     """Схема получения правила роли пользователя."""
 
 
-class RoleRuleCreate(RoleRuleBase):
-    """Схема создания правила роли пользователя."""
+class RoleRuleResponse(RoleRuleBase):
+    """Схема ответа с информацией о правиле роли пользователя."""
 
     allowed: bool
     full_access: bool
-
-
-class RoleRuleResponse(RoleRuleCreate):
-    """Схема ответа с информацией о правиле роли пользователя."""
 
 
 class RoleRuleUpdate(BaseSchema):
@@ -48,16 +46,9 @@ class RoleRuleUpdate(BaseSchema):
     full_access: bool | None = None
 
 
-class RoleRuleDelete(RoleRuleGet):
-    """Схема удаления правила роли пользователя."""
-
-
 @dataclass
 class RuleInfo:
-    """Класс данных правила.
-
-    Включает в себя правила для своих и чужих объектов
-    """
+    """Класс данных, включающих в себя правила для своих и чужих объектов."""
 
     owned_rule: RoleRuleModel
     alien_rule: RoleRuleModel
