@@ -1,7 +1,7 @@
 [project]
 name = "social_network_api"
 version = "1.0"
-description = "Тестовое задание с реализацией API с авторизацией и разграничением прав"
+description = "Реализация API социальной сети с системами аутентификации и прав доступа "
 
 authors = [{ name = "UnBut", email = "un_but@vk.com" }]
 

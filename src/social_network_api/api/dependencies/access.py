@@ -22,7 +22,7 @@ def find_rule_info(
         authorized_user: optional_auth_dep,
         db: db_dep,
     ) -> RuleInfo:
-        if not authorized_user:  # TODO добавить роль guest
+        if not authorized_user:  # TODO(UnBut): #1 добавить роль guest
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Необходима авторизация")
 
         return await get_rule_info(authorized_user, object_type, action, db)
