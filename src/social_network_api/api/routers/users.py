@@ -10,6 +10,7 @@ from social_network_api.api.dependencies import (
     auth_dep,
     db_dep,
     find_rule_info,
+    optional_auth_dep,
     user_dep,
 )
 from social_network_api.db.dal import UserDAL
@@ -40,11 +41,12 @@ router = APIRouter(
 )
 async def create(
     user_info: UserCreate,
+    authorized_user: optional_auth_dep,
     db: db_dep,
     create_rule_info: Annotated[RuleInfo, find_rule_info("users", "create")],
     getting_rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
 ) -> UserResponse | UserFullResponse:
-    check_rule(create_rule_info.owned_rule)
+    check_rule(create_rule_info.alien_rule if authorized_user else create_rule_info.owned_rule)
 
     try:
         user = await UserDAL.create(user_info, db)

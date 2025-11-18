@@ -104,12 +104,12 @@ class PostModel(BaseModel):
     content: Mapped[str] = mapped_column(String(1000))
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[UserModel] = relationship(back_populates="posts", lazy="joined")
+    user: Mapped[UserModel] = relationship(back_populates="posts", lazy="raise")
 
     comments: Mapped[list[CommentModel]] = relationship(
         back_populates="post",
         cascade="all, delete-orphan",
-        lazy="joined",
+        lazy="raise",
     )
 
     @override
@@ -125,10 +125,10 @@ class CommentModel(BaseModel):
     content: Mapped[str] = mapped_column(String(500))
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[UserModel] = relationship(back_populates="comments", lazy="joined")
+    user: Mapped[UserModel] = relationship(back_populates="comments", lazy="raise")
 
     post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("posts.id"))
-    post: Mapped[PostModel] = relationship(back_populates="comments", lazy="joined")
+    post: Mapped[PostModel] = relationship(back_populates="comments", lazy="raise")
 
     @override
     def get_user_id(self) -> uuid.UUID:

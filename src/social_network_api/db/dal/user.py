@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.base import ExecutableOption
 
-from social_network_api.db.models import UserModel
+from social_network_api.db.models import CommentModel, PostModel, UserModel
 
 if TYPE_CHECKING:
     import uuid
@@ -38,11 +39,7 @@ class UserDAL:
         include: tuple[USER_INCLUDE_TYPE, ...] = (),
     ) -> UserModel:
         if user := await session.scalar(
-            select(UserModel)
-            .where(UserModel.id == user_id)
-            .options(
-                *(selectinload(getattr(UserModel, include_attr)) for include_attr in include),
-            ),
+            select(UserModel).where(UserModel.id == user_id).options(*UserDAL._gen_opts(include)),
         ):
             return user
 
@@ -56,11 +53,7 @@ class UserDAL:
         include: tuple[USER_INCLUDE_TYPE, ...] = (),
     ) -> UserModel:
         if user := await session.scalar(
-            select(UserModel)
-            .where(UserModel.email == email)
-            .options(
-                *(selectinload(getattr(UserModel, include_attr)) for include_attr in include),
-            ),
+            select(UserModel).where(UserModel.email == email).options(*UserDAL._gen_opts(include))
         ):
             return user
 
@@ -72,11 +65,7 @@ class UserDAL:
         session: AsyncSession,
         include: tuple[USER_INCLUDE_TYPE, ...] = (),
     ) -> Sequence[UserModel]:
-        users = await session.scalars(
-            select(UserModel).options(
-                *(selectinload(getattr(UserModel, include_attr)) for include_attr in include),
-            ),
-        )
+        users = await session.scalars(select(UserModel).options(*UserDAL._gen_opts(include)))
         return users.unique().all()
 
     @staticmethod
@@ -106,3 +95,15 @@ class UserDAL:
 
         await session.delete(user)
         await session.commit()
+
+    @staticmethod
+    def _gen_opts(include: tuple[USER_INCLUDE_TYPE, ...]) -> list[ExecutableOption]:
+        options: list[ExecutableOption] = []
+
+        if "posts" in include:
+            options.append(selectinload(UserModel.posts).joinedload(PostModel.comments))
+
+        if "comments" in include:
+            options.append(selectinload(UserModel.comments).joinedload(CommentModel.post))
+
+        return options
