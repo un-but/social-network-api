@@ -1,5 +1,5 @@
 [api]
-name = "Auth Test Task API"
+name = "Social Network API"
 
 jwt_access_expire_seconds = 300
 jwt_refresh_expire_days = 30

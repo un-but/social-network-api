@@ -1,9 +1,9 @@
 [project]
-name = "auth_test_task"
-version = "0.1.0"
-description = "Тестовое задание с реализацией API с авторизацией и разграничением прав"
+name = "social_network_api"
+version = "1.0"
+description = "Реализация API социальной сети с системами аутентификации и прав доступа "
 
-authors = [{ name = "UnBut", email = "unbuting@gmail.com" }]
+authors = [{ name = "UnBut", email = "un_but@vk.com" }]
 
 license = { text = "Proprietary" }
 readme = "README.md"
@@ -31,7 +31,7 @@ ruff = "^0.13.0"
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
-include = ["auth_test_task*"]
+include = ["social_network_api*"]
 
 # LSP and Linter configuration
 [tool.basedpyright]
@@ -46,7 +46,7 @@ reportImplicitStringConcatenation = "none" # Отключает ошибку п�
 # reportMissingTypeStubs = "warning"
 
 [tool.ruff]
-src = ["src/auth_test_task"]
+src = ["src/social_network_api"]
 line-length = 100
 indent-width = 4
 lint.select = ["ALL"]

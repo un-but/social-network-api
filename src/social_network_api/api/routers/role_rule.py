@@ -1,0 +1,74 @@
+"""Эндпоинты, отвечающие за управление правилами ролей."""
+
+import logging
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy.exc import IntegrityError
+
+from social_network_api.api.dependencies import db_dep, find_rule_info, role_rule_dep
+from social_network_api.db.dal import RoleRuleDAL
+from social_network_api.schemas import RoleRuleGet, RoleRuleResponse, RoleRuleUpdate, RuleInfo
+from social_network_api.utils.access import check_rule
+
+logger = logging.getLogger("social_network_api")
+router = APIRouter(
+    prefix="/role-rules",
+    tags=["Управление правилами ролей"],
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Правило роли не найдено"},
+    },
+)
+
+# В данном router'е везде будет применяться alien_rule, так как у правил не может быть владельца
+
+
+@router.get(
+    "/{role}/{object_type}/{action}/{owned}",
+    summary="Получить правило роли",
+    response_description="Информация о правиле роли: правило роли успешно найдено",
+)
+async def get_role_rule(
+    role_rule: role_rule_dep,
+    rule_info: Annotated[RuleInfo, find_rule_info("role_rules", "read")],
+) -> RoleRuleResponse:
+    check_rule(rule_info.alien_rule)
+    return RoleRuleResponse.model_validate(role_rule)
+
+
+@router.get(
+    "/",
+    summary="Получить все правила ролей",
+    response_description="Информация о правилах ролей: список успешно сформирован",
+)
+async def get_all_role_rules(
+    rule_info: Annotated[RuleInfo, find_rule_info("users", "read")],
+    db: db_dep,
+) -> list[RoleRuleResponse]:
+    check_rule(rule_info.alien_rule)
+    role_rules = await RoleRuleDAL.get_all(db)
+
+    return [RoleRuleResponse.model_validate(role_rule) for role_rule in role_rules]
+
+
+@router.patch(
+    "/{role}/{object_type}/{action}/{owned}",
+    summary="Обновить правило роли",
+    response_description="Информация о правиле роли: правило роли успешно обновлёно",
+)
+async def update_role_rule(
+    update_info: RoleRuleUpdate,
+    role_rule: role_rule_dep,
+    update_rule_info: Annotated[RuleInfo, find_rule_info("role_rules", "update")],
+    getting_rule_info: Annotated[RuleInfo, find_rule_info("role_rules", "read")],
+    db: db_dep,
+) -> RoleRuleResponse:
+    check_rule(update_rule_info.alien_rule)
+
+    try:
+        role_rule = await RoleRuleDAL.update(RoleRuleGet.model_validate(role_rule), update_info, db)
+    except IntegrityError:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нарушение ограничений данных")
+    else:
+        check_rule(getting_rule_info.alien_rule)
+        return RoleRuleResponse.model_validate(role_rule)

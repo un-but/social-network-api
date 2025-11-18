@@ -1,11 +1,11 @@
-"""Файл настройки генерации обновлений базы данных."""
+"""Файл настройки автогенерации обновлений базы данных на основе изменений."""
 
 import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from auth_test_task.db.models import BaseModel
-from auth_test_task.schemas import config
+from social_network_api.db.models import BaseModel
+from social_network_api.schemas import config
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
