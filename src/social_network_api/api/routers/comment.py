@@ -6,7 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 
-from social_network_api.api.dependencies import auth_dep, comment_dep, db_dep, find_rule_info, post_dep
+from social_network_api.api.dependencies import (
+    auth_dep,
+    comment_dep,
+    db_dep,
+    find_rule_info,
+    post_dep,
+)
 from social_network_api.db.dal import CommentDAL
 from social_network_api.schemas import CommentCreate, CommentResponse, CommentUpdate, RuleInfo
 from social_network_api.utils.access import check_rule, choose_rule

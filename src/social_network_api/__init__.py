@@ -1,1 +1,1 @@
-"""Директория исходного кода Social Network API."""
+"""Модуль исходного кода Social Network API."""

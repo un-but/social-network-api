@@ -119,12 +119,7 @@ class Config(BaseSettings):
                     if extra_data.get("source") == "env" and env_name in os.environ:
                         sub_fields[sub_field_name] = os.environ[env_name]
 
-                if not sub_fields:
-                    return _parse_sub_fields_from_yml(field_name)
-
                 return sub_fields
-
-            def _parse_sub_fields_from_yml(self, field_name: str) -> dict[str, Any]: ...
 
         return (EnvSource(settings_cls), TomlSource(settings_cls))
 

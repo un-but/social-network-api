@@ -121,7 +121,7 @@ async def get_any_user(
 @router.patch(
     "/{user_id}",
     summary="Обновить любого пользователя",
-    response_description="Информация о пользователе: пользователь успешно обновлён/удалён",
+    response_description="Информация о пользователе: пользователь успешно обновлён",
 )
 async def update_user(
     update_info: UserUpdate,
