@@ -21,4 +21,4 @@ EXPOSE 8000
 
 # Команда запуска (можно переопределить в docker-compose)
 CMD alembic upgrade head && \
-    uvicorn src.auth_test_task.main:app --host 0.0.0.0 --port 8000 --log-config logconfig.ini
+    uvicorn social_network_api.main:app --host 0.0.0.0 --port 8000 --log-config logconfig.ini
