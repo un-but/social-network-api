@@ -28,9 +28,8 @@ class UserDAL:
 
         session.add(user)
         await session.commit()
-        await session.refresh(user)
 
-        return user
+        return await UserDAL.get_by_id(user.id, session, ("comments", "posts"))
 
     @staticmethod
     async def get_by_id(
@@ -80,7 +79,7 @@ class UserDAL:
             setattr(user, field, value)
 
         await session.commit()
-        return user
+        return await UserDAL.get_by_id(user.id, session, ("comments", "posts"))
 
     @staticmethod
     async def deactivate(user_id: uuid.UUID, session: AsyncSession) -> None:

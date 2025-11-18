@@ -11,7 +11,7 @@ from pydantic import Field
 from social_network_api.schemas._common import BaseSchema
 
 if TYPE_CHECKING:  # Требуется для корректной работы отложенного импорта
-    from social_network_api.schemas import PostChildResponse, UserResponse
+    from social_network_api.schemas import PostResponse, UserResponse
 
 
 class CommentCreate(BaseSchema):
@@ -36,7 +36,7 @@ class CommentChildPostResponse(CommentBaseResponse):
 class CommentChildUserResponse(CommentBaseResponse):
     """Схема для ответа с комментарием в составе пользователя."""
 
-    post: PostChildResponse | None = None
+    post: PostResponse | None = None
 
 
 class CommentResponse(CommentChildUserResponse, CommentChildPostResponse):

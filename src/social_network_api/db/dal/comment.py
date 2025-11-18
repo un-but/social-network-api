@@ -7,8 +7,10 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.base import ExecutableOption
 
-from social_network_api.db.models import CommentModel
+from social_network_api.db.models import CommentModel, PostModel
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +20,11 @@ if TYPE_CHECKING:
 
 class CommentDAL:
     """Класс для работы с комментариями в базе данных."""
+
+    _default_opts: tuple[ExecutableOption, ...] = (
+        joinedload(CommentModel.user),
+        joinedload(CommentModel.post).joinedload(PostModel.user),
+    )
 
     @staticmethod
     async def create(
@@ -30,9 +37,8 @@ class CommentDAL:
 
         session.add(comment)
         await session.commit()
-        await session.refresh(comment)
 
-        return comment
+        return await CommentDAL.get_by_id(comment.id, session)
 
     @staticmethod
     async def get_by_id(
@@ -40,7 +46,9 @@ class CommentDAL:
         session: AsyncSession,
     ) -> CommentModel:
         if comment := await session.scalar(
-            select(CommentModel).where(CommentModel.id == comment_id)
+            select(CommentModel)
+            .where(CommentModel.id == comment_id)
+            .options(*CommentDAL._default_opts)
         ):
             return comment
 
@@ -51,7 +59,7 @@ class CommentDAL:
     async def get_all(
         session: AsyncSession,
     ) -> Sequence[CommentModel]:
-        comments = await session.scalars(select(CommentModel))
+        comments = await session.scalars(select(CommentModel).options(*CommentDAL._default_opts))
         return comments.unique().all()
 
     @staticmethod
@@ -66,7 +74,7 @@ class CommentDAL:
             setattr(comment, field, value)
 
         await session.commit()
-        return comment
+        return await CommentDAL.get_by_id(comment.id, session)
 
     @staticmethod
     async def drop(comment_id: uuid.UUID, session: AsyncSession) -> None:

@@ -61,4 +61,4 @@ class RoleRuleDAL:
             setattr(role_rule, field, value)
 
         await session.commit()
-        return role_rule
+        return await RoleRuleDAL.get(role_rule_info, session)
